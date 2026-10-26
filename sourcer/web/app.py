@@ -31,6 +31,7 @@ from .. import agent, events, report, rules, runner, store
 from ..ask import parse_ask
 from .. import __version__
 from ..config import cfg, data_dir, is_production
+from ..collector import SHARED_LINKEDIN_KEYS
 from ..models import Candidate
 from ..db import jload, jdump, kv_get, kv_set, now, session
 from ..normalize import norm_text
@@ -1511,9 +1512,12 @@ def create_app() -> Flask:
         out = []
         with session() as conn:
             jdmod.sync_dir(conn)
+            kv_set(conn, "collector_last_seen", now())
         for p in sorted(jd_dir.glob("*.md")):
             out.append({"filename": p.name, "text": p.read_text(encoding="utf-8")})
-        return jsonify({"vacancies": out})
+        li = cfg().get("linkedin", {}) or {}
+        return jsonify({"vacancies": out,
+                        "settings": {"linkedin": {k: li.get(k) for k in SHARED_LINKEDIN_KEYS}}})
 
     @app.post("/api/ingest/candidates")
     def ingest_candidates():
@@ -1547,6 +1551,9 @@ def create_app() -> Flask:
                     errors.append(f"{type(e).__name__}: {e}"[:200])
             conn.commit()
             scored = runner.score_all(conn, only_new=True, trace=True)
+        with session() as conn:
+            kv_set(conn, "collector_last_push", jdump({"at": now(), "created": created, "updated": updated,
+                                                       "failed": failed}))
         started = False
         if (created or updated) and agent.available()[0] and not JOB.busy():
             def run_agent_after(j):
@@ -1566,10 +1573,14 @@ def create_app() -> Flask:
         li = cfg().get("linkedin", {}) or {}
         keys = ("daily_profile_cap", "ramp_up", "window_start", "window_end", "weekdays_only",
                 "session_minutes_max", "location_filter", "deep_experience", "geo_urn",
-                "max_pages_per_search", "profiles_per_vacancy", "company_mode", "browser")
+                "max_pages_per_search", "profiles_per_vacancy", "profiles_per_run", "max_rounds",
+                "company_mode", "browser")
         ag = agent.settings()
+        with session() as conn:
+            seen, push = kv_get(conn, "collector_last_seen"), kv_get(conn, "collector_last_push")
         from ..linkedin_browser import find_browsers
         return jsonify({"linkedin": {k: li.get(k) for k in keys}, "browsers_found": sorted(find_browsers()),
+                        "collector": {"last_seen": seen, "last_push": jload(push, {}) if push else {}},
                         "threshold": cfg().get("scoring.default_shortlist_threshold", 75),
                         "retention_days": cfg().get("retention.delete_after_days", 365),
                         "city": cfg().get("location.target_city", "Karachi"),
@@ -1602,6 +1613,9 @@ def create_app() -> Flask:
             upd["linkedin"]["session_minutes_max"] = max(5, min(int(li_in["session_minutes_max"]), 90))
         if "max_pages_per_search" in li_in:
             upd["linkedin"]["max_pages_per_search"] = max(1, min(int(li_in["max_pages_per_search"]), 10))
+        for k, hi in (("profiles_per_run", 500), ("max_rounds", 50)):
+            if k in li_in:
+                upd["linkedin"][k] = max(0, min(int(li_in[k] or 0), hi))
         if "profiles_per_vacancy" in li_in:
             upd["linkedin"]["profiles_per_vacancy"] = max(1, min(int(li_in["profiles_per_vacancy"]), 50))
         if li_in.get("browser") in {"auto", "chrome", "edge"}:

@@ -22,6 +22,24 @@ from .config import cfg
 from .db import kv_get, kv_set, session
 
 
+# Pacing settings the portal controls; they are applied here at every run. (The browser choice is
+# per computer, so it stays local.)
+SHARED_LINKEDIN_KEYS = ("daily_profile_cap", "ramp_up", "window_start", "window_end", "weekdays_only",
+                        "session_minutes_max", "location_filter", "deep_experience", "geo_urn",
+                        "max_pages_per_search", "profiles_per_vacancy", "profiles_per_run", "max_rounds",
+                        "company_mode")
+
+
+def apply_portal_settings(settings: dict, log=print) -> int:
+    """Take the pacing settings the portal sent and make them this collector's settings."""
+    li = {k: v for k, v in ((settings or {}).get("linkedin") or {}).items() if k in SHARED_LINKEDIN_KEYS and v is not None}
+    if li:
+        cfg().save_ui({"linkedin": li})
+        log("applied the portal's pacing settings: " + ", ".join(f"{k}={v}" for k, v in li.items()
+                                                                  if k not in ("geo_urn",)))
+    return len(li)
+
+
 def _headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
@@ -43,6 +61,7 @@ def pull_vacancies(url: str, token: str, log=print) -> int:
         name = Path(it["filename"]).name                  # never a path from the network
         (jd_dir / name).write_text(it["text"], encoding="utf-8")
     log(f"pulled {len(items)} vacancy file(s) from the portal")
+    apply_portal_settings(r.json().get("settings"), log)
     return len(items)
 
 
@@ -81,10 +100,14 @@ def push_candidates(url: str, token: str, since_id: int | None = None, batch: in
     return tot
 
 
-def collect(url: str, token: str, limit: int | None = None, push_only: bool = False, log=print) -> int:
+def collect(url: str, token: str, limit: int | None = None, push_only: bool = False, log=print,
+            now: bool = False) -> int:
+    """`now=True` ignores the portal's working hours (for a test, or when you really mean it)."""
     if not push_only:
         pull_vacancies(url, token, log)
-        s = runner.run(sources=["linkedin_browser"], manual=True, max_results=limit, log=log)
+        s = runner.run(sources=["linkedin_browser"], manual=now, max_results=limit, log=log)
+        if any("waiting" in n for n in s.notes):
+            log("Outside the working hours set in the portal - nothing was opened. Run again with --now to ignore them.")
         for line in s.as_text().splitlines():
             log(line)
     tot = push_candidates(url, token, log=log)

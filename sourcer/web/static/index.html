@@ -254,10 +254,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <div class="card pad" id="liCloud" style="display:none;margin-bottom:14px">
     <h2>LinkedIn sourcing runs on your own PC</h2>
     <p class="hint" style="margin-bottom:12px">LinkedIn needs a real, visible browser with your login, which a cloud server cannot give it. So the <b>collector</b> - this same program on your PC - sources LinkedIn for the vacancies below and sends every profile here. This portal scores them and the AI agent reads them. You can also add profiles any time in <b>Import</b>.</p>
+    <div id="liCollectorStat" class="banner info" style="margin:0 0 12px"></div>
     <div class="log" id="liCloudCmd" style="max-height:none"></div>
   </div>
   <div class="two" id="liLocal">
-    <div class="card pad">
+    <div class="card pad" id="liDirect">
       <h2>Direct LinkedIn sourcing</h2>
       <p class="hint" style="margin-bottom:14px">Opens LinkedIn in a visible Chrome window, searches for each open vacancy, reads the profiles in your target city and files them. Slowly, a few at a time, like a person would.</p>
       <div class="steps" id="liSteps"></div>
@@ -271,8 +272,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       </div>
       <p class="hint" style="margin-top:14px">Automated access is against LinkedIn's terms and can get the account restricted. Pacing lowers that risk; it cannot remove it. If LinkedIn shows any warning, the bot stops by itself and pauses for two days.</p>
     </div>
-    <div class="card pad">
+    <div class="card pad" id="liPacing">
       <h2>Pacing &amp; limits</h2>
+      <p class="hint" id="pacingCloudNote" style="display:none;margin-bottom:10px"><b>The collector on your PC uses these.</b> It fetches them from here every time it starts, so change them here, save, and the next run follows. Settings changed in the small local app are overwritten.</p>
       <p class="hint" style="margin-bottom:12px">Smaller numbers are safer. A new routine starts at 10 profiles a day and grows by 5 each active day up to your limit.</p>
       <div class="form">
         <label class="f c3">Profiles per day (max)<input type="number" id="sCap" min="1" max="150"></label>
@@ -281,7 +283,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
         <label class="f c3">Work until<input type="text" id="sTo" placeholder="19:00"></label>
         <label class="f c3">People from<select id="sLoc"><option value="metro">Target city only</option><option value="country">Anywhere in the country</option><option value="any">Anywhere</option></select></label>
         <label class="f c3">Search pages per vacancy<input type="number" id="sPages" min="1" max="10"></label>
-        <label class="f c3">Browser for LinkedIn<select id="sBrowser"><option value="auto">Automatic (Chrome, else Edge)</option><option value="chrome">Google Chrome</option><option value="edge">Microsoft Edge</option></select><span class="sub" style="font-weight:400" id="sBrowserNote"></span></label>
+        <label class="f c3" id="sBrowserWrap">Browser for LinkedIn<select id="sBrowser"><option value="auto">Automatic (Chrome, else Edge)</option><option value="chrome">Google Chrome</option><option value="edge">Microsoft Edge</option></select><span class="sub" style="font-weight:400" id="sBrowserNote"></span></label>
+        <label class="f c3">Profiles per run (0 = no limit)<input type="number" id="sPerRun" min="0" max="500" title="Stop one run after this many profiles"></label>
+        <label class="f c3">Rounds per run (0 = until time ends)<input type="number" id="sRounds" min="0" max="50" title="One round = a pass over every open vacancy"></label>
         <label class="f c3">Profiles per vacancy per round<input type="number" id="sBatch" min="1" max="50" title="Open this many profiles for one vacancy, then move to the next"></label>
         <label class="f c6" style="flex-direction:row;gap:18px;align-items:center;flex-wrap:wrap">
           <span><input type="checkbox" id="sRamp"> start small and grow</span>
@@ -793,12 +797,18 @@ $("#jSave").onclick = guard(async () => {
 });
 
 /* ---------- linkedin ---------- */
-const SET_IDS = {sCap:"daily_profile_cap", sSess:"session_minutes_max", sFrom:"window_start", sTo:"window_end", sLoc:"location_filter", sPages:"max_pages_per_search", sGeo:"geo_urn", sBatch:"profiles_per_vacancy"};
+const SET_IDS = {sCap:"daily_profile_cap", sSess:"session_minutes_max", sFrom:"window_start", sTo:"window_end", sLoc:"location_filter", sPages:"max_pages_per_search", sGeo:"geo_urn", sBatch:"profiles_per_vacancy", sPerRun:"profiles_per_run", sRounds:"max_rounds"};
 const loadSettings = guard(async () => {
   const d = await api("/api/settings");
   const s = d.linkedin;
   Object.entries(SET_IDS).forEach(([id, k]) => { if (document.activeElement !== $("#" + id)) $("#" + id).value = s[k] ?? ""; });
   $("#sBrowser").value = s.browser || "auto";
+  if ($("#liCollectorStat")) {
+    const c = d.collector || {}, p = c.last_push || {};
+    const ago = t => { if (!t) return ""; const m = Math.round((Date.now() - new Date(t)) / 60000); return m < 2 ? "just now" : m < 90 ? m + " min ago" : m < 2880 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " days ago"; };
+    $("#liCollectorStat").innerHTML = c.last_seen ? `<b>Collector last connected:</b> ${ago(c.last_seen)}${p.at ? ` · last profiles received ${ago(p.at)} (${p.created || 0} new, ${p.updated || 0} updated)` : " · no profiles received yet"}`
+      : "<b>No collector has connected yet.</b> Run <code>collector_run.bat</code> on your PC (see below).";
+  }
   $("#sBrowserNote").textContent = (d.browsers_found && d.browsers_found.length) ? "Found on this PC: " + d.browsers_found.map(b => b === "edge" ? "Edge" : "Chrome").join(", ") : "Chrome / Edge not found - the built-in browser will be used";
   $("#sRamp").checked = !!s.ramp_up; $("#sWeek").checked = !!s.weekdays_only; $("#sDeep").checked = !!s.deep_experience;
   // weights
@@ -807,7 +817,8 @@ const loadSettings = guard(async () => {
 $("#saveSet").onclick = guard(async () => {
   const li = {daily_profile_cap: +$("#sCap").value, session_minutes_max: +$("#sSess").value, window_start: $("#sFrom").value, window_end: $("#sTo").value,
     location_filter: $("#sLoc").value, max_pages_per_search: +$("#sPages").value, geo_urn: $("#sGeo").value, ramp_up: $("#sRamp").checked,
-    weekdays_only: $("#sWeek").checked, deep_experience: $("#sDeep").checked, profiles_per_vacancy: +$("#sBatch").value, browser: $("#sBrowser").value};
+    weekdays_only: $("#sWeek").checked, deep_experience: $("#sDeep").checked, profiles_per_vacancy: +$("#sBatch").value, profiles_per_run: +$("#sPerRun").value, max_rounds: +$("#sRounds").value};
+  if ($("#sBrowserWrap").style.display !== "none") li.browser = $("#sBrowser").value;     // the browser choice belongs to the PC, not the portal
   await api("/api/settings", {method: "POST", json: {linkedin: li}}); toast("Settings saved"); $("#sGeo").value = ""; loadSettings(); refresh();
 });
 const WEIGHT_DIMS = [
@@ -927,8 +938,9 @@ async function authInit() {
     $("#hAvatar").textContent = (nm.trim()[0] || "?").toUpperCase();
     const admin = me.role === "admin";
     if (me.cloud && admin) {
-      $("#liCloud").style.display = ""; $("#liLocal").style.display = "none";
-      $("#liCloudCmd").textContent = "On your PC (once):\n  set SOURCER_DATA_DIR=collector_data\n  python -m sourcer ui          <- press 'Log in to LinkedIn', then close the browser\n\nEvery time you want to source:\n  set SOURCER_DATA_DIR=collector_data\n  set INGEST_TOKEN=<the INGEST_TOKEN you set on the server>\n  python -m sourcer collect --url " + location.origin;
+      $("#liCloud").style.display = ""; $("#liDirect").style.display = "none"; $("#sBrowserWrap").style.display = "none";
+      $("#liLocal").style.gridTemplateColumns = "1fr"; $("#pacingCloudNote").style.display = "";
+      $("#liCloudCmd").textContent = "On your PC (once):\n  set SOURCER_DATA_DIR=collector_data\n  python -m sourcer ui          <- press 'Log in to LinkedIn', then close the browser\n\nEvery time you want to source:\n  set SOURCER_DATA_DIR=collector_data\n  set INGEST_TOKEN=<the INGEST_TOKEN you set on the server>\n  python -m sourcer collect --url " + location.origin + "\n\nIt follows the working hours and limits set in the Pacing card below. To ignore the hours once (a test), add  --now";
     }
     ["tabOrg", "tabCo", "tabTt", "tabAg", "tabUsers", "sepAdmin"].forEach(id => $("#" + id).style.display = admin ? "" : "none");
     ["tabLi", "tabImp"].forEach(id => $("#" + id).style.display = admin ? "" : "none");

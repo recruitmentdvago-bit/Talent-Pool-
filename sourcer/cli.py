@@ -278,7 +278,7 @@ def cmd_collect(args) -> int:
     if not url or not token:
         _p("need --url and --token (or PORTAL_URL and INGEST_TOKEN in the environment)")
         return 2
-    return collect(url, token, limit=args.limit, push_only=args.push_only, log=_p)
+    return collect(url, token, limit=args.limit, push_only=args.push_only, log=_p, now=args.now)
 
 
 def cmd_rescore(args) -> int:
@@ -355,6 +355,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--token", help="the portal's INGEST_TOKEN")
     p.add_argument("--limit", type=int, help="open at most this many profiles")
     p.add_argument("--push-only", action="store_true", help="skip sourcing, just send what is already here")
+    p.add_argument("--now", action="store_true", help="ignore the working hours set in the portal")
     p.set_defaults(f=cmd_collect)
 
     p = sub.add_parser("purge", help="delete records past their retention date")

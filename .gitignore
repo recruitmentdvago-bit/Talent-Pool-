@@ -16,3 +16,4 @@ config/settings.ui.yaml
 .env
 /data/
 *.log
+collector_run.bat

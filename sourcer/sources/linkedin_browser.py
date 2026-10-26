@@ -142,6 +142,11 @@ class LinkedInBrowserSource(BaseSource):
         if budget <= 0:
             res.notes.append("linkedin_browser: today's allowance is used up")
             return res
+        per_run = int(self.c.get("profiles_per_run", 0) or 0)
+        if per_run > 0:
+            budget = min(budget, per_run)
+        max_rounds = int(self.c.get("max_rounds", 0) or 0)
+        rounds = 0
         if not ctx.jds:
             return res
         if ctx.dry_run:
@@ -362,6 +367,10 @@ class LinkedInBrowserSource(BaseSource):
                                 log(f"   taking a {slept/60:.0f} minute break")
                             else:
                                 pacer.wait(pacer.profile_gap(), ctx.should_stop)
+                    rounds += 1                                   # one pass over every vacancy
+                    if max_rounds and rounds >= max_rounds and done < budget:
+                        res.notes.append(f"stopped after {rounds} round(s), as set")
+                        break
                     if not progressed and all(j.code in exhausted or not queues[j.code] for j in jds):
                         if all(j.code in exhausted for j in jds):
                             res.notes.append("searches exhausted for every vacancy")
