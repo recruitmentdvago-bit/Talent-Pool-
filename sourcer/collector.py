@@ -60,6 +60,17 @@ def pull_vacancies(url: str, token: str, log=print) -> int:
     for it in items:
         name = Path(it["filename"]).name                  # never a path from the network
         (jd_dir / name).write_text(it["text"], encoding="utf-8")
+    # The portal decides which vacancies are sourced. Anything it did not send must stop being
+    # "open" here too, otherwise the old ones stay in this PC's database and keep getting searched.
+    from . import jd as jdmod
+    with session() as conn:
+        synced = jdmod.sync_dir(conn)
+        keep = [j.code for _, j, _ in synced]
+        if keep:
+            conn.execute(f"UPDATE jds SET active=CASE WHEN code IN ({','.join('?' * len(keep))}) THEN 1 ELSE 0 END",
+                         keep)
+        else:
+            conn.execute("UPDATE jds SET active=0")
     sel = r.json().get("sourcing") or {}
     log(f"pulled {len(items)} vacancy file(s) from the portal"
         + (f" (the portal has {sel['total']} open; only these {sel['selected']} are being sourced now)"
