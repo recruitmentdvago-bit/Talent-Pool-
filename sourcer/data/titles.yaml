@@ -1,0 +1,140 @@
+# Title families. A candidate title is matched to a family by its aliases/tokens;
+# scoring gives full credit inside the family, partial credit to `adjacent`
+# families, and token-similarity credit to anything else.
+
+data_analyst:
+  aliases: [data analyst, business intelligence analyst, bi analyst, reporting analyst,
+            mis analyst, insights analyst, analytics analyst, business analyst - data,
+            mis officer, reporting specialist, head of business intelligence,
+            head of analytics, head of mis, analytics manager, bi manager, mis manager,
+            business intelligence manager, reporting manager, analytics lead, insights manager]
+  adjacent: [data_scientist, data_engineer, business_analyst, bi_developer]
+  core_skills: [sql, excel, data_analysis, power_bi, tableau]
+data_engineer:
+  aliases: [data engineer, etl developer, etl engineer, data platform engineer,
+            big data engineer, analytics engineer, data warehouse engineer, datawarehouse developer,
+            head of data engineering, data engineering manager, lead data engineer,
+            data architect, head of data platform]
+  adjacent: [data_analyst, software_engineer, data_scientist, bi_developer]
+  core_skills: [sql, python, etl, data_warehousing, spark, airflow]
+data_scientist:
+  aliases: [data scientist, machine learning engineer, ml engineer, ai engineer,
+            applied scientist, research scientist - ml, decision scientist,
+            head of data science, data science manager, lead data scientist, head of ai]
+  adjacent: [data_analyst, data_engineer]
+  core_skills: [python, machine_learning, statistics, sql]
+bi_developer:
+  aliases: [bi developer, business intelligence developer, power bi developer,
+            tableau developer, report developer, bi consultant, bi engineer]
+  adjacent: [data_analyst, data_engineer]
+  core_skills: [power_bi, tableau, sql, data_warehousing]
+business_analyst:
+  aliases: [business analyst, ba, product analyst, process analyst, systems analyst]
+  adjacent: [data_analyst, project_manager]
+  core_skills: [data_analysis, stakeholder_management, sql, excel]
+software_engineer:
+  aliases: [software engineer, software developer, backend developer, full stack developer,
+            frontend developer, programmer, sde, application developer]
+  adjacent: [data_engineer, devops_engineer]
+  core_skills: [git, javascript, python, java]
+devops_engineer:
+  aliases: [devops engineer, sre, site reliability engineer, cloud engineer,
+            platform engineer, infrastructure engineer]
+  adjacent: [software_engineer, data_engineer]
+  core_skills: [docker, kubernetes, ci_cd, linux, terraform]
+project_manager:
+  aliases: [project manager, programme manager, program manager, delivery manager, scrum master, pmo]
+  adjacent: [business_analyst, product_manager]
+  core_skills: [project_management, agile, stakeholder_management]
+product_manager:
+  aliases: [product manager, product owner, associate product manager]
+  adjacent: [business_analyst, project_manager]
+  core_skills: [stakeholder_management, data_analysis, agile]
+finance_analyst:
+  aliases: [financial analyst, finance analyst, fp&a analyst, management accountant,
+            finance manager, accountant, assistant manager finance]
+  adjacent: [data_analyst, business_analyst]
+  core_skills: [financial_modelling, accounting, excel]
+hr_professional:
+  aliases: [hr business partner, hrbp, hr manager, hr generalist, talent acquisition specialist,
+            recruiter, hr officer, people partner, hr executive]
+  adjacent: [business_analyst]
+  core_skills: [recruitment, hr_operations, stakeholder_management]
+marketing_manager:
+  aliases: [marketing manager, digital marketing manager, brand manager, marketing executive,
+            marketing specialist, digital marketer, social media manager, growth marketer,
+            marketing coordinator, head of marketing, marketing lead, communications manager]
+  adjacent: [product_manager, business_analyst]
+  core_skills: [digital_marketing, social_media, marketing_strategy, google_analytics]
+sales_manager:
+  aliases: [sales manager, account manager, business development manager, regional sales manager,
+            key account manager, sales executive, territory manager, area sales manager,
+            head of sales, national sales manager, sales lead, sales officer]
+  adjacent: [marketing_manager, business_analyst]
+  core_skills: [sales, business_development, crm, negotiation]
+supply_chain:
+  aliases: [supply chain manager, procurement manager, logistics manager, warehouse manager,
+            supply chain analyst, procurement officer, purchasing manager, inventory manager,
+            materials manager, head of supply chain, supply chain lead, supply planner]
+  adjacent: [operations_manager, project_manager]
+  core_skills: [supply_chain_management, procurement, inventory_management, erp]
+operations_manager:
+  aliases: [operations manager, operations director, plant manager, factory manager,
+            production manager, operations lead, general manager operations,
+            head of operations, chief operating officer, operational excellence manager]
+  adjacent: [supply_chain, project_manager]
+  core_skills: [operations_management, lean, process_improvement, erp]
+quality_assurance:
+  aliases: [quality assurance engineer, qa engineer, sqa engineer, test engineer,
+            qa analyst, quality engineer, qa lead, qa manager, automation tester,
+            manual tester, software tester, sdet]
+  adjacent: [software_engineer, devops_engineer]
+  core_skills: [testing, automation_testing, selenium, jira]
+graphic_designer:
+  aliases: [graphic designer, ui designer, ux designer, ui/ux designer, visual designer,
+            creative designer, web designer, product designer, brand designer, art director,
+            design lead, head of design, senior designer]
+  adjacent: [content_writer, marketing_manager]
+  core_skills: [figma, adobe_creative_suite, ui_design, ux_design]
+content_writer:
+  aliases: [content writer, copywriter, technical writer, content strategist,
+            content manager, editor, content creator, communications specialist,
+            social media content writer, seo writer, documentation specialist]
+  adjacent: [graphic_designer, marketing_manager]
+  core_skills: [content_writing, seo, copywriting, editing]
+customer_service:
+  aliases: [customer service manager, customer support manager, call center manager,
+            customer experience manager, customer success manager, support specialist,
+            help desk manager, customer service representative, cx lead]
+  adjacent: [operations_manager, sales_manager]
+  core_skills: [customer_service, communication, crm, problem_solving]
+legal:
+  aliases: [legal counsel, corporate lawyer, company secretary, legal advisor,
+            legal manager, head of legal, compliance officer, compliance manager,
+            legal associate, attorney, advocate, legal executive]
+  adjacent: [hr_professional, business_analyst]
+  core_skills: [corporate_law, compliance, contract_management, regulatory]
+network_engineer:
+  aliases: [network engineer, network administrator, system administrator, it infrastructure engineer,
+            network security engineer, it support engineer, systems engineer, it administrator,
+            noc engineer, network architect, it manager]
+  adjacent: [devops_engineer, software_engineer]
+  core_skills: [networking, cisco, linux, firewalls, cloud_infrastructure]
+mechanical_engineer:
+  aliases: [mechanical engineer, hvac engineer, maintenance engineer, piping engineer,
+            design engineer mechanical, plant engineer, facilities engineer,
+            mechanical design engineer, project engineer mechanical]
+  adjacent: [operations_manager]
+  core_skills: [autocad, mechanical_design, solidworks, manufacturing]
+electrical_engineer:
+  aliases: [electrical engineer, power systems engineer, instrumentation engineer,
+            control systems engineer, electrical design engineer, eee engineer,
+            electronics engineer, electrical maintenance engineer]
+  adjacent: [mechanical_engineer]
+  core_skills: [electrical_design, plc, scada, power_systems]
+civil_engineer:
+  aliases: [civil engineer, structural engineer, construction manager, site engineer,
+            quantity surveyor, estimation engineer, civil design engineer,
+            project engineer civil, planning engineer, land surveyor]
+  adjacent: [mechanical_engineer, project_manager]
+  core_skills: [autocad, structural_design, estimation, project_planning]

@@ -1,0 +1,33 @@
+# Geography for location scoring. `metro` members score as same-city.
+# Everything in `country` scores as relocatable; anything else is remote-only.
+target: Karachi, Pakistan
+metro:
+  - karachi
+  - karachi division
+  - clifton
+  - defence housing authority
+  - dha karachi
+  - gulshan-e-iqbal
+  - gulshan e iqbal
+  - north nazimabad
+  - korangi
+  - malir
+  - sindh industrial trading estate
+  - site area
+  - saddar
+  - bahria town karachi
+country: pakistan
+country_cities:
+  - lahore
+  - islamabad
+  - rawalpindi
+  - faisalabad
+  - multan
+  - peshawar
+  - quetta
+  - hyderabad
+  - sialkot
+  - gujranwala
+  - abbottabad
+  - sukkur
+remote_tokens: [remote, work from home, wfh, anywhere, hybrid]

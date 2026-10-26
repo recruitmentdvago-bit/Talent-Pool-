@@ -1,0 +1,54 @@
+# Industry inference from company names and profile text.
+# Tuned for the Karachi / Pakistan market - extend as you source.
+banking:
+  keywords: [bank, banking, microfinance, islamic banking, branch banking]
+  companies: [hbl, habib bank, ubl, united bank, mcb, meezan, bank alfalah, askari bank,
+              standard chartered, faysal bank, js bank, bankislami, soneri, allied bank,
+              national bank of pakistan, nbp, dubai islamic, al baraka, khushhali, telenor microfinance]
+fintech:
+  keywords: [fintech, payments, wallet, digital banking, lending platform, remittance]
+  companies: [easypaisa, jazzcash, nayapay, sadapay, finja, tez financial, abhi, post ex,
+              keenu, safepay, trellis, haball, oneload]
+telecom:
+  keywords: [telecom, telco, cellular, gsm, network operator]
+  companies: [jazz, mobilink, telenor pakistan, ufone, zong, ptcl, cmpak, wateen, transworld]
+ecommerce:
+  keywords: [e-commerce, ecommerce, marketplace, q-commerce, quick commerce, retail tech, logistics tech]
+  companies: [daraz, foodpanda, bazaar, airlift, cheetay, krave mart, pandamart, alibaba,
+              telemart, priceoye, dastgyr]
+software_it:
+  keywords: [software house, it services, software development, product engineering, saas, consultancy]
+  companies: [systems limited, systems ltd, netsol, 10pearls, arbisoft, contour software,
+              techlogix, folio3, venturedive, confiz, devsinc, ibex, s&p global, afiniti,
+              emumba, tkxel, cubix, trg, i2c, careem, motive, keepTruckin, mtbc, cloudpso]
+fmcg:
+  keywords: [fmcg, consumer goods, beverages, food manufacturing]
+  companies: [unilever, nestle, p&g, procter, reckitt, colgate, engro foods, friesland,
+              national foods, shan foods, continental biscuits, pepsi, coca cola, tapal, mondelez]
+manufacturing:
+  keywords: [manufacturing, textile, cement, steel, chemicals, fertilizer, automotive, plant]
+  companies: [lucky cement, engro, fauji, dg khan cement, ici, archroma, indus motor, atlas honda,
+              pak suzuki, millat, gul ahmed, nishat, interloop, sapphire, artistic milliners]
+healthcare_pharma:
+  keywords: [hospital, healthcare, pharmaceutical, pharma, clinical, diagnostics, medical]
+  companies: [aga khan, indus hospital, liaquat national, ziauddin, south city, getz pharma,
+              searle, abbott, martin dow, sami pharmaceuticals, hilton pharma, oblabs, sehat kahani]
+insurance:
+  keywords: [insurance, takaful, actuarial, underwriting, claims]
+  companies: [jubilee life, efu, adamjee, state life, tpl insurance, igi, pak qatar]
+energy_utilities:
+  keywords: [power generation, oil and gas, refinery, utility, energy, renewables, solar]
+  companies: [k-electric, ke, ogdcl, ppl, pso, shell pakistan, total parco, hubco, byco, attock]
+logistics:
+  keywords: [logistics, freight, supply chain, courier, shipping, warehousing, 3pl]
+  companies: [tcs, leopards, m&p, trax, bluex, rider, swyft, dp world, hutchison, agility, maersk]
+consulting_audit:
+  keywords: [consulting, advisory, assurance, audit firm, big four, management consulting]
+  companies: [kpmg, deloitte, ey, ernst, pwc, a f ferguson, grant thornton, bdo, mckinsey, bain, bcg]
+education:
+  keywords: [university, school, edtech, higher education, academic]
+  companies: [iba, lums, nust, fast, habib university, szabist, bahria university, aku, dow university,
+              sabaq, nearpeer, taleemabad]
+public_sector:
+  keywords: [government, ministry, authority, regulator, public sector, donor funded, ngo, non-profit]
+  companies: [sbp, state bank of pakistan, secp, fbr, nadra, pseb, unicef, undp, world bank, usaid, akdn]

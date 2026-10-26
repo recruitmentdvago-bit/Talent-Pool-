@@ -1,0 +1,175 @@
+# Skill taxonomy.
+#   canonical_name:
+#     aliases:  [strings that should map to this skill]
+#     implies:  [other canonical skills this one entails]
+#     group:    coarse family, used for partial credit
+#
+# Add your own entries freely - the normalizer reloads this file on every run.
+
+python:
+  aliases: [py, python3, "python 3", cpython]
+  group: programming
+sql:
+  aliases: [t-sql, tsql, pl/sql, plsql, ansi sql, "structured query language"]
+  group: data
+r:
+  aliases: ["r language", rlang, "r programming"]
+  group: programming
+scala:
+  aliases: []
+  group: programming
+java:
+  aliases: [core java, java8, "java 8", j2ee]
+  group: programming
+javascript:
+  aliases: [js, es6, ecmascript, typescript, ts]
+  group: programming
+excel:
+  aliases: ["ms excel", "microsoft excel", advanced excel, spreadsheets, vlookup, pivot tables]
+  group: data
+power_bi:
+  aliases: [powerbi, "power-bi", pbi, "power bi desktop", dax]
+  group: bi
+tableau:
+  aliases: [tableau desktop, tableau server, tableau prep]
+  group: bi
+looker:
+  aliases: [looker studio, "google data studio", data studio, lookml]
+  group: bi
+qlik:
+  aliases: [qlikview, qlik sense]
+  group: bi
+etl:
+  aliases: [elt, "data pipeline", "data pipelines", pipeline development, ingestion pipelines]
+  group: data_eng
+airflow:
+  aliases: [apache airflow, mwaa, cloud composer]
+  implies: [etl, python]
+  group: data_eng
+dbt:
+  aliases: ["data build tool", dbt core, dbt cloud]
+  implies: [sql, etl]
+  group: data_eng
+spark:
+  aliases: [apache spark, pyspark, spark sql, databricks]
+  implies: [etl]
+  group: data_eng
+kafka:
+  aliases: [apache kafka, confluent, event streaming]
+  group: data_eng
+hadoop:
+  aliases: [hdfs, mapreduce, hive, impala]
+  group: data_eng
+snowflake:
+  aliases: [snowflake dwh]
+  implies: [sql, data_warehousing]
+  group: data_eng
+bigquery:
+  aliases: [big query, gbq]
+  implies: [sql]
+  group: data_eng
+redshift:
+  aliases: [amazon redshift]
+  implies: [sql]
+  group: data_eng
+data_warehousing:
+  aliases: [data warehouse, dwh, dimensional modelling, dimensional modeling, star schema, kimball, data modelling, data modeling]
+  group: data_eng
+data_analysis:
+  aliases: [data analytics, analytics, business analysis, exploratory data analysis, eda, reporting, mis]
+  group: data
+statistics:
+  aliases: [statistical analysis, stats, hypothesis testing, regression analysis, ab testing, "a/b testing"]
+  group: data_science
+machine_learning:
+  aliases: [ml, predictive modelling, predictive modeling, supervised learning, model building]
+  implies: [statistics]
+  group: data_science
+deep_learning:
+  aliases: [neural networks, dl, cnn, rnn, transformers]
+  implies: [machine_learning]
+  group: data_science
+pytorch:
+  aliases: [torch]
+  implies: [deep_learning, python]
+  group: data_science
+tensorflow:
+  aliases: [tf, keras]
+  implies: [deep_learning, python]
+  group: data_science
+nlp:
+  aliases: [natural language processing, text mining, llm, large language models]
+  implies: [machine_learning]
+  group: data_science
+pandas:
+  aliases: [numpy, scipy]
+  implies: [python]
+  group: data_science
+scikit_learn:
+  aliases: [sklearn, "scikit learn"]
+  implies: [machine_learning, python]
+  group: data_science
+aws:
+  aliases: [amazon web services, ec2, s3, lambda, glue]
+  group: cloud
+azure:
+  aliases: [microsoft azure, azure data factory, adf, synapse]
+  group: cloud
+gcp:
+  aliases: ["google cloud", "google cloud platform", dataflow]
+  group: cloud
+docker:
+  aliases: [containers, containerisation, containerization]
+  group: devops
+kubernetes:
+  aliases: [k8s, eks, aks, gke]
+  implies: [docker]
+  group: devops
+terraform:
+  aliases: [iac, "infrastructure as code"]
+  group: devops
+ci_cd:
+  aliases: ["ci/cd", jenkins, github actions, gitlab ci, azure devops]
+  group: devops
+git:
+  aliases: [github, gitlab, bitbucket, version control]
+  group: devops
+linux:
+  aliases: [unix, bash, shell scripting]
+  group: devops
+# --- business / corporate ---
+project_management:
+  aliases: [pmp, project delivery, programme management, program management, prince2]
+  group: business
+agile:
+  aliases: [scrum, kanban, agile methodology, safe, sprint planning]
+  group: business
+stakeholder_management:
+  aliases: [stakeholder engagement, client management, business partnering]
+  group: business
+financial_modelling:
+  aliases: [financial modeling, fp&a, forecasting, budgeting, variance analysis]
+  group: finance
+accounting:
+  aliases: [acca, ca, cpa, ifrs, bookkeeping, general ledger, reconciliation]
+  group: finance
+# --- HR ---
+recruitment:
+  aliases: [talent acquisition, ta, sourcing, hiring, headhunting]
+  group: hr
+hr_operations:
+  aliases: [hr ops, hris, payroll, employee relations, hr generalist]
+  group: hr
+compensation_benefits:
+  aliases: [c&b, comp and ben, total rewards, job evaluation]
+  group: hr
+# --- soft ---
+communication:
+  aliases: [communication skills, verbal communication, written communication, presentation skills]
+  group: soft
+leadership:
+  aliases: [team leadership, people management, mentoring, team management]
+  group: soft
+problem_solving:
+  aliases: [analytical thinking, critical thinking, analytical skills]
+  group: soft
