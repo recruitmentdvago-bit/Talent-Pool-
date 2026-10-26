@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dvago Talent Pool</title>
+<link rel="icon" href="/static/brand/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/static/brand/favicon.png">
+<link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Dvago brand: logo green #4CB003 (hi #58BD0B). Neutrals lean slightly green. */
+  color-scheme:light;
+  --bg:#f4f8ef; --panel:#fff; --ink:#15210f; --muted:#5d6b54; --line:#dfe8d6; --soft:#eef4e7;
+  --brand:#4cb003; --brand-hi:#58bd0b; --brand-lo:#3b8f00; --brand-text:#2f7a00; --brand-ink:#fff; --tint:#eaf6dd;
+  --good:#1f7a3a; --good-bg:#e2f5e6; --warn:#9a5b00; --warn-bg:#fdf0d5;
+  --bad:#b42318; --bad-bg:#fde8e6; --info-bg:#eaf6dd;
+  --side-bg:#fff; --side-line:#e3ebdb;
+  --shadow:0 1px 2px rgba(21,33,15,.05),0 6px 20px rgba(47,122,0,.06); --radius:14px;
+}
+:root[data-theme=dark]{
+  --bg:#0d140b; --panel:#141d11; --ink:#e8f1e1; --muted:#9bac90; --line:#26331f; --soft:#1b2717;
+  --brand:#5bc10a; --brand-hi:#6fd21a; --brand-lo:#4cb003; --brand-text:#86dc3d; --brand-ink:#0b1607; --tint:#1a2a12;
+  --good:#6fd98a; --good-bg:#14301c; --warn:#f2b45a; --warn-bg:#392a10;
+  --bad:#ff8a80; --bad-bg:#3b1a17; --info-bg:#1a2a12; --side-bg:#101810; --side-line:#212d1b; --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---- shell: sidebar + content ---- */
+.shell{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100vh}
+.side{background:var(--side-bg);border-right:1px solid var(--side-line);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:22px 14px 16px}
+.logo{display:block;padding:0 10px 22px}
+.logo img{display:block;width:150px;height:auto;max-width:100%}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav button{display:flex;align-items:center;gap:11px;background:none;border:0;padding:10px 12px;border-radius:11px;cursor:pointer;color:var(--muted);font-weight:600;text-align:left;width:100%}
+.nav button svg{width:19px;height:19px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nav button:hover{background:var(--soft);color:var(--ink)}
+.nav button.on{background:var(--tint);color:var(--brand-text)}
+.nav button.on svg{stroke:var(--brand)}
+.nav .sep{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);opacity:.8;padding:16px 12px 6px;font-weight:700}
+.grow{flex:1}
+.userbox{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--panel)}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--brand-hi),var(--brand-lo));color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.userbox .who{min-width:0;flex:1;line-height:1.25}
+.userbox .who b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.userbox .who span{font-size:11.5px;color:var(--muted);text-transform:capitalize}
+.content{min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:22px 32px 4px;width:100%}
+.pagehead h1{font-size:24px;line-height:1.2;margin:0;letter-spacing:-.02em;font-weight:800}
+.pagehead p{margin:3px 0 0;color:var(--muted);font-size:13.5px}
+.heartbeat{width:18px;height:auto;display:none}
+.working .heartbeat{display:inline-block;animation:beat 1.1s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}20%{transform:scale(1.25)}40%{transform:scale(1)}60%{transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.working .heartbeat{animation:none}}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--soft);color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.brand{background:var(--tint);color:var(--brand-text)}
+main{width:100%;padding:18px 32px 40px}
+section{display:none} section.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.pad{padding:18px 20px}
+h2{font-size:16px;margin:0 0 4px;letter-spacing:-.01em;font-weight:700} h3{font-size:12px;margin:0 0 9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+p.hint{margin:0;color:var(--muted);font-size:13px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1.5px solid var(--line);background:var(--panel);padding:8px 15px;border-radius:10px;cursor:pointer;font-weight:700;transition:background .12s,border-color .12s,filter .12s}
+.btn:hover{background:var(--soft);border-color:color-mix(in srgb,var(--brand) 35%,var(--line))} .btn:disabled{opacity:.5;cursor:not-allowed}
+a.btn{text-decoration:none;color:inherit;display:inline-block}
+a.btn.primary{color:var(--brand-ink)}
+.btn.primary{background:linear-gradient(180deg,var(--brand-hi),var(--brand));color:var(--brand-ink);border-color:var(--brand);box-shadow:0 4px 12px -5px color-mix(in srgb,var(--brand) 75%,transparent)}
+.btn.primary:hover{filter:brightness(1.06);background:linear-gradient(180deg,var(--brand-hi),var(--brand))}
+.btn.danger{color:var(--bad);border-color:var(--bad-bg)} .btn.sm{padding:5px 11px;font-size:12px;border-radius:9px}
+input[type=text],input[type=number],input[type=search],input[type=password],select,textarea{border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 11px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 22%,transparent)}
+.btn:focus-visible,.nav button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+input[type=checkbox]{accent-color:var(--brand);width:16px;height:16px}
+input[type=range]{accent-color:var(--brand)}
+textarea{width:100%;resize:vertical}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);font-weight:700}
+label.f input,label.f select,label.f textarea{color:var(--ink);font-weight:400;font-size:14px}
+.ask{display:flex;gap:10px} .ask input{flex:1;font-size:15px;padding:12px 16px;border-radius:12px}
+.understood{margin-top:10px;font-size:13px;color:var(--muted)} .understood b{color:var(--ink)}
+.filters{display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin-top:16px}
+.slider{display:flex;align-items:center;gap:8px} .slider input[type=range]{width:150px}
+.slider output{font-weight:800;min-width:42px;text-align:right}
+table{width:100%;border-collapse:collapse}
+th{font-size:11.5px;color:var(--muted);text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;position:sticky;top:0;background:var(--panel);z-index:1}
+td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+#rows tr{cursor:pointer} tbody tr:hover{background:color-mix(in srgb,var(--tint) 55%,transparent)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.score{display:inline-block;min-width:50px;text-align:center;padding:4px 9px;border-radius:99px;font-weight:800;font-variant-numeric:tabular-nums}
+.s-hi{background:var(--brand);color:#fff} .s-mid{background:var(--tint);color:var(--brand-text)} .s-lo{background:var(--warn-bg);color:var(--warn)} .s-no{background:var(--soft);color:var(--muted)}
+.name{font-weight:700} .sub{color:var(--muted);font-size:12px}
+.empty{padding:48px 20px;text-align:center;color:var(--muted)}
+.chips{display:flex;gap:5px;flex-wrap:wrap} .chip{padding:3px 9px;border-radius:99px;background:var(--soft);font-size:12px;font-weight:500}
+.chip.ok{background:var(--tint);color:var(--brand-text);font-weight:600} .chip.miss{background:var(--bad-bg);color:var(--bad)} .chip.flag{background:var(--warn-bg);color:var(--warn)} .chip.dept{background:var(--tint);color:var(--brand-text);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.jd h2{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.jd .meta{color:var(--muted);font-size:12px;margin:2px 0 10px}
+.stat{display:flex;gap:18px;margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line)} .stat div{font-size:12px;color:var(--muted)} .stat b{display:block;font-size:20px;color:var(--ink);font-weight:800}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(580px,100vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.14);transform:translateX(105%);transition:transform .22s ease;z-index:20;overflow:auto}
+.drawer.on{transform:none}
+.scrim{position:fixed;inset:0;background:rgba(10,20,6,.4);z-index:15;display:none} .scrim.on{display:block}
+.dh{padding:20px 22px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:start;position:sticky;top:0;background:var(--panel);z-index:2}
+.dh h2{font-size:19px;margin:0}
+.db{padding:20px 22px;display:flex;flex-direction:column;gap:22px}
+.bars{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:grid;grid-template-columns:130px 1fr 52px;gap:10px;align-items:center;font-size:12px}
+.track{height:8px;background:var(--soft);border-radius:99px;overflow:hidden} .fill{height:100%;background:linear-gradient(90deg,var(--brand-lo),var(--brand-hi));border-radius:99px}
+.bar-row .note{grid-column:2/4;color:var(--muted);margin-top:-4px;font-size:11.5px}
+.exp{padding:9px 0;border-bottom:1px solid var(--line)} .exp:last-child{border:0}
+.modal{position:fixed;inset:0;background:rgba(10,20,6,.5);z-index:30;display:none;align-items:flex-start;justify-content:center;padding:4vh 14px;overflow:auto}
+.modal.on{display:flex} .modal .card{width:min(820px,100%)}
+.form{display:grid;grid-template-columns:repeat(6,1fr);gap:13px} .form .c2{grid-column:span 2} .form .c3{grid-column:span 3} .form .c6{grid-column:span 6}
+.drop{border:2px dashed var(--line);border-radius:var(--radius);padding:40px 20px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--brand);background:var(--tint);color:var(--brand-text)}
+.progress{height:10px;background:var(--soft);border-radius:99px;overflow:hidden} .progress i{display:block;height:100%;background:linear-gradient(90deg,var(--brand-lo),var(--brand-hi));border-radius:99px}
+.log{background:#0d140b;color:#cfe3c2;border-radius:12px;padding:13px 15px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;max-height:300px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.banner{padding:12px 15px;border-radius:12px;font-size:13px;margin-bottom:14px} .banner.bad{background:var(--bad-bg);color:var(--bad)} .banner.warn{background:var(--warn-bg);color:var(--warn)} .banner.info{background:var(--info-bg);color:var(--brand-text)}
+.steps{display:flex;flex-direction:column;gap:9px} .step{display:flex;gap:10px;align-items:center} .dot{width:9px;height:9px;border-radius:99px;background:var(--line);flex:none} .dot.ok{background:var(--brand)} .dot.no{background:var(--bad)} .dot.mid{background:var(--warn)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#15210f;color:#fff;padding:11px 18px;border-radius:12px;z-index:50;opacity:0;pointer-events:none;transition:.2s;max-width:90vw;font-weight:600;border-left:4px solid var(--brand)}
+#toast.on{opacity:1} #toast.err{background:var(--bad);border-left-color:#fff;color:#fff}
+.tablewrap{overflow:auto;max-height:calc(100vh - 290px)}
+/* agent activity */
+.nowbar{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:var(--radius);border:1.5px solid var(--line);background:var(--panel)}
+.nowbar.live{border-color:var(--brand);background:linear-gradient(90deg,var(--tint),var(--panel) 70%)}
+.nowbar img{width:30px;height:auto;flex:none}
+.nowbar.live img{animation:beat 1.1s ease-in-out infinite}
+.nowbar b{display:block;font-size:15px} .nowbar span.sub{display:block}
+.pipe{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.pipe .st{flex:1;min-width:110px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--panel);font-size:12px;color:var(--muted);font-weight:700}
+.pipe .st b{display:block;font-size:20px;color:var(--ink);font-weight:800}
+.pipe .st.on{border-color:var(--brand);background:var(--tint);color:var(--brand-text)}
+.feed{max-height:calc(100vh - 380px);min-height:300px;overflow:auto;padding:4px 0}
+.ev{display:grid;grid-template-columns:70px 104px minmax(0,1fr);gap:10px;padding:8px 18px;border-bottom:1px solid var(--line);align-items:start;font-size:13px}
+.ev:last-child{border-bottom:0}
+.ev time{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px;padding-top:2px}
+.ev .who{font-weight:700} .ev .vac{margin-left:6px}
+.ev .det{margin-top:4px;color:var(--muted);font-size:12px}
+.ev.error{background:var(--bad-bg)} .ev.warn{background:var(--warn-bg)}
+.sg{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:800;background:var(--soft);color:var(--muted);white-space:nowrap}
+.sg.extract{background:#e6f0fb;color:#1d5aa6} .sg.parse{background:#efe9fb;color:#5b3aa6} .sg.store{background:var(--soft);color:var(--muted)}
+.sg.score{background:var(--tint);color:var(--brand-text)} .sg.agent{background:var(--brand);color:#fff} .sg.error{background:var(--bad);color:#fff} .sg.job{background:var(--soft);color:var(--muted)}
+@media(max-width:700px){.ev{grid-template-columns:60px minmax(0,1fr)}.ev .sgc{grid-column:2}}
+/* org structure */
+.dept h2{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.dept .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:14px 0 6px}
+.pick{display:flex;flex-direction:column;gap:2px;max-height:190px;overflow:auto;border:1.5px solid var(--line);border-radius:10px;padding:6px}
+.pick label{display:flex;gap:9px;align-items:center;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--ink);font-weight:500}
+.pick label:hover{background:var(--soft)}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+@media(max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;align-items:center;gap:8px;padding:10px 14px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--side-line)}
+  .logo{padding:0 8px 0 0}.logo img{width:104px}
+  .nav{flex-direction:row;gap:2px}.nav button{white-space:nowrap;padding:8px 11px}.nav .sep{display:none}
+  .grow{display:none}.userbox{padding:6px 8px}.userbox .who{display:none}
+  .topbar{padding:16px 16px 0}main{padding:14px 16px 32px}
+  .form .c2,.form .c3{grid-column:span 6}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="side">
+  <a class="logo" href="/" aria-label="Dvago"><img src="/static/brand/logo.png" alt="Dvago"></a>
+  <nav class="nav" id="tabs">
+    <button data-t="cand" class="on"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Candidates</button>
+    <button data-t="jds"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Vacancies</button>
+    <button data-t="org" id="tabOrg" style="display:none"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><path d="M12 8v4M5 16v-2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/></svg>Org structure</button>
+    <button data-t="co" id="tabCo" style="display:none"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M9 17h6"/></svg>Companies</button>
+    <button data-t="tt" id="tabTt" style="display:none"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg>Search titles</button>
+    <div class="sep" id="sepAdmin" style="display:none">Admin</div>
+    <button data-t="ag" id="tabAg" style="display:none"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Agent activity</button>
+    <button data-t="li" id="tabLi"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>LinkedIn</button>
+    <button data-t="imp" id="tabImp"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Import</button>
+    <button data-t="users" id="tabUsers" style="display:none"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Users</button>
+  </nav>
+  <div class="grow"></div>
+  <div class="sub" id="hVer" style="padding:0 12px 8px"></div>
+  <div class="userbox">
+    <div class="avatar" id="hAvatar">·</div>
+    <div class="who"><b id="hUser">–</b><span id="hRole"></span></div>
+    <button class="btn sm" id="hLogout" title="Sign out">Logout</button>
+  </div>
+</aside>
+<div class="content">
+<div class="topbar">
+  <div class="pagehead"><h1 id="pgTitle">Candidates</h1><p id="pgSub"></p></div>
+  <span class="grow" style="display:block;flex:1"></span>
+  <span class="pill brand" id="pCand">–</span>
+  <span class="pill" id="pLi"><img class="heartbeat" src="/static/brand/heart.png" alt=""><span id="pLiT">–</span></span>
+</div>
+<main>
+<div id="pwBanner"></div>
+<!-- ================= CANDIDATES ================= -->
+<section id="t-cand" class="on">
+  <div class="card pad">
+    <h2>Ask for candidates</h2>
+    <p class="hint">Type the request the way your manager says it, in English or Roman Urdu. Example: <em>data analyst manager ke liye resumes nikaldo jinka score 75% se upar ho</em></p>
+    <div class="ask" style="margin-top:12px">
+      <input type="search" id="askBox" placeholder="e.g. senior data engineer, 80% se upar">
+      <button class="btn primary" id="askGo">Find</button>
+    </div>
+    <div class="understood" id="understood"></div>
+    <div class="filters">
+      <label class="f">Vacancy<select id="fRole"><option value="">All vacancies</option></select></label>
+      <label class="f">Minimum score
+        <span class="slider"><input type="range" id="fMin" min="0" max="100" step="1" value="75"><output id="fMinOut">75%</output></span></label>
+      <label class="f">City<input type="text" id="fCity" placeholder="any"></label>
+      <label class="f">Stage<select id="fStatus"><option value="">any</option><option>new</option><option>reviewed</option><option>shortlisted</option><option>contacted</option><option>rejected</option><option>hired</option></select></label>
+      <label class="f" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="fHide"> hide contacted / rejected</label>
+      <span class="grow"></span>
+      <div class="row">
+        <button class="btn" data-x="xlsx">Excel</button>
+        <button class="btn" data-x="csv">CSV</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="pad row" style="justify-content:space-between;padding-bottom:6px"><b id="count">–</b><span class="sub">click a row for the full profile and why it scored that way</span><span class="grow"></span>
+      <button class="btn primary" id="dlAll" disabled title="One ZIP with every resume / profile PDF in this list, plus a cover sheet and an Excel summary">Download all resumes (ZIP)</button></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="num">Score</th><th>Candidate</th><th>Current role</th><th class="num">Yrs</th><th>City</th><th>Vacancy</th><th>Stage</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+    <div class="empty" id="empty" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ================= VACANCIES ================= -->
+<section id="t-jds">
+  <div class="row" style="justify-content:space-between;margin-bottom:14px">
+    <div></div>
+    <div class="row" id="jdAdminBtns"><a class="btn" href="/api/templates/vacancy.docx" title="A Word form for ONE vacancy: fill it in, then use 'From Word / PDF files' or 'Load a Word / PDF file' - every field fills itself">⬇ Word template</a>
+    <a class="btn" href="/api/templates/vacancies.xlsx" title="An Excel sheet, one row per vacancy, for adding many at once with 'Bulk add (Excel)'">⬇ Excel template</a>
+    <button class="btn" id="bulkJd" title="Choose one or many Word / PDF / text files - one vacancy is made from each">From Word / PDF files</button>
+    <button class="btn" id="bulkSheet" title="Download the Excel template, fill one row per vacancy, upload it">Bulk add (Excel)</button>
+    <button class="btn primary" id="newJd">+ New vacancy</button></div>
+    <input type="file" id="bulkIn" multiple accept=".pdf,.docx,.txt,.md" hidden>
+  </div>
+  <div class="grid" id="jdGrid"></div>
+</section>
+
+<!-- ================= LINKEDIN ================= -->
+<section id="t-li">
+  <div id="liBanners"></div>
+  <div class="card pad" id="liCloud" style="display:none;margin-bottom:14px">
+    <h2>LinkedIn sourcing runs on your own PC</h2>
+    <p class="hint" style="margin-bottom:12px">LinkedIn needs a real, visible browser with your login, which a cloud server cannot give it. So the <b>collector</b> - this same program on your PC - sources LinkedIn for the vacancies below and sends every profile here. This portal scores them and the AI agent reads them. You can also add profiles any time in <b>Import</b>.</p>
+    <div class="log" id="liCloudCmd" style="max-height:none"></div>
+  </div>
+  <div class="two" id="liLocal">
+    <div class="card pad">
+      <h2>Direct LinkedIn sourcing</h2>
+      <p class="hint" style="margin-bottom:14px">Opens LinkedIn in a visible Chrome window, searches for each open vacancy, reads the profiles in your target city and files them. Slowly, a few at a time, like a person would.</p>
+      <div class="steps" id="liSteps"></div>
+      <div style="margin:16px 0 6px" class="row" id="liUse"></div>
+      <div class="progress"><i id="liBar" style="width:0"></i></div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn" id="liLogin" title="Opens a normal Chrome/Edge window with the bot's own profile. Sign in once (Google works), then close the window.">1 · Log in to LinkedIn</button>
+        <button class="btn" id="liTest" title="Opens exactly one profile, so you can check it was read correctly">2 · Test with 1 profile</button>
+        <button class="btn primary" id="liStart">3 · Start sourcing now</button>
+        <button class="btn danger" id="liStop">Stop</button>
+      </div>
+      <p class="hint" style="margin-top:14px">Automated access is against LinkedIn's terms and can get the account restricted. Pacing lowers that risk; it cannot remove it. If LinkedIn shows any warning, the bot stops by itself and pauses for two days.</p>
+    </div>
+    <div class="card pad">
+      <h2>Pacing &amp; limits</h2>
+      <p class="hint" style="margin-bottom:12px">Smaller numbers are safer. A new routine starts at 10 profiles a day and grows by 5 each active day up to your limit.</p>
+      <div class="form">
+        <label class="f c3">Profiles per day (max)<input type="number" id="sCap" min="1" max="150"></label>
+        <label class="f c3">One sitting lasts at most (min)<input type="number" id="sSess" min="5" max="90"></label>
+        <label class="f c3">Work from<input type="text" id="sFrom" placeholder="10:00"></label>
+        <label class="f c3">Work until<input type="text" id="sTo" placeholder="19:00"></label>
+        <label class="f c3">People from<select id="sLoc"><option value="metro">Target city only</option><option value="country">Anywhere in the country</option><option value="any">Anywhere</option></select></label>
+        <label class="f c3">Search pages per vacancy<input type="number" id="sPages" min="1" max="10"></label>
+        <label class="f c3">Browser for LinkedIn<select id="sBrowser"><option value="auto">Automatic (Chrome, else Edge)</option><option value="chrome">Google Chrome</option><option value="edge">Microsoft Edge</option></select><span class="sub" style="font-weight:400" id="sBrowserNote"></span></label>
+        <label class="f c3">Profiles per vacancy per round<input type="number" id="sBatch" min="1" max="50" title="Open this many profiles for one vacancy, then move to the next"></label>
+        <label class="f c6" style="flex-direction:row;gap:18px;align-items:center;flex-wrap:wrap">
+          <span><input type="checkbox" id="sRamp"> start small and grow</span>
+          <span><input type="checkbox" id="sWeek"> weekdays only</span>
+          <span><input type="checkbox" id="sDeep"> open full experience list</span></label>
+        <label class="f c6">City filter: apply "Karachi" in a LinkedIn people search once, then paste the page address here<input type="text" id="sGeo" placeholder="https://www.linkedin.com/search/results/people/?geoUrn=..."></label>
+      </div>
+      <div class="row" style="margin-top:14px"><button class="btn primary" id="saveSet">Save settings</button><span class="hint" id="savedNote"></span></div>
+    </div>
+  </div>
+  <div class="card pad" style="margin-top:14px">
+    <h2>Scoring Weights</h2>
+    <p class="hint" style="margin-bottom:12px">Adjust how much each dimension matters when scoring candidates. Weights are renormalized to 100%, so the absolute numbers don't need to add up exactly.</p>
+    <div id="weightsGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px"></div>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:16px">
+      <button class="btn primary sm" id="saveWeights">Save Weights</button>
+      <span class="hint">Total: <b id="wTotal">100</b></span>
+    </div>
+  </div>
+  <div class="card pad" style="margin-top:14px"><h3>Activity</h3><div class="log" id="liLog">Nothing running.</div></div>
+</section>
+
+<!-- ================= IMPORT ================= -->
+<section id="t-imp">
+  <div class="two">
+    <div class="card pad">
+      <h2>Add profiles you already have</h2>
+      <p class="hint" style="margin-bottom:12px">LinkedIn "Save to PDF" files, CVs, or an Excel/CSV list. They are read, de-duplicated, scored and filed.</p>
+      <div class="drop" id="drop">Drop PDF, CSV or Excel files here<br><span class="sub">or click to choose</span></div>
+      <input type="file" id="fileIn" multiple accept=".pdf,.csv,.xlsx,.xls,.tsv" hidden>
+      <div class="row" style="margin-top:14px"><button class="btn primary" id="procGo">Process waiting files</button><span class="hint" id="inboxNote"></span></div>
+    </div>
+    <div class="card pad"><h3>Activity</h3><div class="log" id="impLog">Nothing running.</div></div>
+  </div>
+</section>
+
+<!-- ================= USERS (admin only) ================= -->
+<section id="t-users">
+  <div class="card pad">
+    <div class="row" style="justify-content:space-between;margin-bottom:14px">
+      <div><h2 style="font-size:17px">User accounts</h2><p class="hint">Create a login for each HOD, then link them to their departments. They only ever see the vacancies and candidates of those departments.</p></div>
+      <span class="row"><a class="btn" href="/api/backup" title="Database, vacancies and settings in one ZIP. Contains personal data and password hashes - keep it private.">⬇ Backup</a>
+        <a class="btn" href="/api/backup?pdfs=1" title="Same, plus every stored profile PDF (can be large)">⬇ Backup with PDFs</a>
+        <button class="btn primary" id="newUser">+ Add user</button></span>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Departments</th><th class="num">Sees</th><th>Actions</th></tr></thead>
+      <tbody id="userRows"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ================= AGENT ACTIVITY (admin only) ================= -->
+<section id="t-ag">
+  <div class="nowbar" id="agNow"><img src="/static/brand/heart.png" alt=""><div><b id="agNowT">Checking…</b><span class="sub" id="agNowS"></span></div></div>
+  <div class="pipe" id="agPipe"></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="pad row" style="justify-content:space-between;padding-bottom:10px">
+      <b>Live log</b>
+      <span class="row">
+        <select id="agStage"><option value="">All steps</option><option value="extract">Extracting</option><option value="parse">Parsing</option><option value="store">Saving</option><option value="score">Scoring</option><option value="agent">AI agent</option><option value="job">Jobs</option><option value="error">Problems</option></select>
+        <input type="search" id="agCand" placeholder="candidate name…" style="width:170px">
+        <label class="row" style="gap:6px;font-size:12px;color:var(--muted);font-weight:600"><input type="checkbox" id="agPause"> pause scrolling</label>
+        <button class="btn sm" id="agClear">Clear log</button>
+      </span>
+    </div>
+    <div class="feed" id="agFeed"></div>
+  </div>
+  <div class="two">
+    <div class="card pad">
+      <h2>Run the agent</h2>
+      <p class="hint" style="margin-bottom:12px">After profiles come in (Import, or the LinkedIn collector), the pipeline reads and rubric-scores them. The AI agent then reads the best ones against each vacancy and gives its own score.</p>
+      <div class="row">
+        <button class="btn primary" id="agRun">Run the agent now</button>
+        <button class="btn" id="agRunAll" title="Read every shortlisted profile again, even ones it already read">Read everyone again</button>
+        <button class="btn" id="agTest">Test connection</button>
+        <button class="btn danger" id="agStop">Stop</button>
+      </div>
+      <div id="agTestOut" class="hint" style="margin-top:10px"></div>
+    </div>
+    <div class="card pad">
+      <h2>Agent settings</h2>
+      <div class="form" style="margin-top:8px">
+        <label class="f c3">Provider<select id="agProv"></select></label>
+        <label class="f c3">Model <span style="font-weight:400">(empty = default)</span><input type="text" id="agModel" placeholder="" autocomplete="off"></label>
+        <label class="f c2">Profiles per vacancy<input type="number" id="agTop" min="1" max="100"></label>
+        <label class="f c2">Only if rubric ≥<input type="number" id="agMin" min="0" max="100"></label>
+        <label class="f c2">Agent's share of score<input type="number" id="agW" min="0" max="0.5" step="0.05"></label>
+        <div class="c6 steps" id="agKeys"></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn primary sm" id="agSave">Save</button><span class="hint" id="agSaved"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PREFERRED COMPANIES (admin only) ================= -->
+<section id="t-co">
+  <div class="row" style="justify-content:space-between;margin-bottom:16px">
+    <p class="hint" style="max-width:66ch">Make a list of target companies and say where it applies: whole departments, specific roles, or everything. Every matching vacancy gets those companies automatically. A vacancy with no company list simply searches everyone relevant. Saving rescores everyone.</p>
+    <button class="btn primary" id="newGroup">+ Add company list</button>
+  </div>
+  <div class="card pad" style="margin-bottom:16px">
+    <h2>How the bot uses these lists</h2>
+    <div class="pick" style="max-height:none;margin-top:8px" id="modePick">
+      <label><input type="radio" name="cmode" value="priority_first"><span><b>Preferred companies first, then everyone</b> <span class="sub">(recommended) - searches people at the listed companies first; when those run out it widens to all of LinkedIn.</span></span></label>
+      <label><input type="radio" name="cmode" value="only"><span><b>Preferred companies only</b> <span class="sub">- never looks outside the lists.</span></span></label>
+      <label><input type="radio" name="cmode" value="ignore"><span><b>Everyone, ignore the lists</b> <span class="sub">- finds all relevant people; lists only raise the score of matching profiles.</span></span></label>
+    </div>
+  </div>
+  <div class="grid" id="groupGrid"></div>
+</section>
+
+<!-- ================= SEARCH TITLES (admin only) ================= -->
+<section id="t-tt">
+  <div class="row" style="justify-content:space-between;margin-bottom:16px">
+    <p class="hint" style="max-width:66ch"><b>Nothing to enter.</b> The bot reads each vacancy's JD and works out which other roles do the same work (e.g. Data Analyst &rarr; BI Analyst, Reporting Analyst), then searches those titles too. It re-reads a JD whenever you change it. This page just shows what it decided - edit a rule only if you disagree; edited rules are never overwritten.</p>
+    <div class="row"><button class="btn" id="genTitles" title="Re-read every JD and redo the drafted rules">Re-read all JDs</button><button class="btn" id="newTitle">+ Add rule by hand</button></div>
+  </div>
+  <div class="grid" id="titleGrid"></div>
+</section>
+
+<!-- company list modal -->
+<div class="modal" id="groupModal"><div class="card pad" style="max-width:600px">
+  <h2 id="groupModalH" style="margin-bottom:14px">Add company list</h2>
+  <div class="form">
+    <label class="f c6">List name<input type="text" id="gName" placeholder="e.g. Top tech employers" autocomplete="off"></label>
+    <label class="f c6">Companies (comma or new line)<textarea id="gCompanies" rows="4" placeholder="Systems Limited, Engro, Jazz, Netsol"></textarea></label>
+    <div class="c6"><div class="sub" style="font-weight:700;margin-bottom:5px">Applies to departments <span style="font-weight:400">(none ticked + no roles = every vacancy)</span></div><div class="pick" id="gDepts"></div></div>
+    <label class="f c6">...and/or roles (comma or new line)<textarea id="gRoles" rows="2" placeholder="Data Analyst, Data Engineer"></textarea></label>
+  </div>
+  <div class="row" style="margin-top:16px;justify-content:space-between">
+    <button class="btn danger" id="gDelete">Delete</button>
+    <span class="row"><button class="btn" id="gCancel">Cancel</button><button class="btn primary" id="gSave">Save &amp; rescore</button></span>
+  </div>
+</div></div>
+
+<!-- title rule modal -->
+<div class="modal" id="titleModal"><div class="card pad" style="max-width:560px">
+  <h2 id="titleModalH" style="margin-bottom:14px">Add search-title rule</h2>
+  <div class="form">
+    <label class="f c6">Role<input type="text" id="tRole" placeholder="e.g. Data Analyst" autocomplete="off"></label>
+    <label class="f c6">Also search for these titles (comma or new line)<textarea id="tTitles" rows="5" placeholder="Business Intelligence Analyst, Reporting Analyst"></textarea></label>
+    <div class="c6"><button class="btn sm" id="tSuggest" type="button">Fill with suggestions</button> <span class="sub" id="tSuggestNote"></span></div>
+  </div>
+  <div class="row" style="margin-top:16px;justify-content:space-between">
+    <button class="btn danger" id="tDelete">Delete</button>
+    <span class="row"><button class="btn" id="tCancel">Cancel</button><button class="btn primary" id="tSave">Save</button></span>
+  </div>
+</div></div>
+
+<!-- bulk add modal -->
+<div class="modal" id="bulkModal"><div class="card pad" style="max-width:640px">
+  <h2 style="margin-bottom:4px">Add many vacancies at once</h2>
+  <p class="hint" style="margin-bottom:14px">One vacancy per row. Department, skills, years and everything else fill themselves in from the columns; companies and search titles come from the central tabs.</p>
+  <div class="steps" style="gap:14px">
+    <div><b>1.</b> Download the template <span class="row" style="display:inline-flex;margin-left:8px"><a class="btn sm" href="/api/templates/vacancies.xlsx">Excel template</a><a class="btn sm" href="/api/templates/vacancy.docx">Word template (single vacancy)</a></span></div>
+    <div><b>2.</b> Fill one row per vacancy (only <i>Job title</i> is required) and save it.</div>
+    <div><b>3.</b> Upload it <span class="row" style="display:inline-flex;margin-left:8px"><button class="btn sm primary" id="bulkSheetPick">Choose Excel / CSV</button></span></div>
+  </div>
+  <input type="file" id="bulkSheetIn" accept=".xlsx,.xlsm,.csv,.tsv" hidden>
+  <div id="bulkResult" style="margin-top:16px"></div>
+  <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" id="bulkClose">Close</button></div>
+</div></div>
+
+<!-- ================= ORG STRUCTURE (admin only) ================= -->
+<section id="t-org">
+  <div class="row" style="justify-content:space-between;margin-bottom:16px">
+    <p class="hint" style="max-width:62ch">Add each department with the roles that belong to it, and pick its HOD(s). Any vacancy whose title matches one of those roles goes to that department automatically, and the HOD sees it the moment they sign in.</p>
+    <div class="row"><button class="btn" id="orgBulk">Paste structure</button><button class="btn primary" id="newDept">+ Add department</button></div>
+  </div>
+  <div id="orgWarn"></div>
+  <div class="grid" id="deptGrid"></div>
+</section>
+
+<!-- department modal -->
+<div class="modal" id="deptModal"><div class="card pad" style="max-width:560px">
+  <h2 id="deptModalH" style="margin-bottom:14px">Add department</h2>
+  <div class="form">
+    <label class="f c6">Department name<input type="text" id="dName" placeholder="e.g. Technology" autocomplete="off"></label>
+    <label class="f c6">Roles in this department (comma or new line)
+      <textarea id="dRoles" rows="4" placeholder="Data Analyst, Data Engineer, BI Developer"></textarea>
+      <span class="sub" style="font-weight:400">A vacancy titled &ldquo;Senior Data Analyst&rdquo; matches the role &ldquo;Data Analyst&rdquo;.</span></label>
+    <div class="c6"><div class="sub" style="font-weight:700;margin-bottom:5px">HOD(s) of this department</div><div class="pick" id="dHods"></div></div>
+  </div>
+  <div class="row" style="margin-top:16px;justify-content:space-between">
+    <button class="btn danger" id="dDelete">Delete</button>
+    <span class="row"><button class="btn" id="dCancel">Cancel</button><button class="btn primary" id="dSave">Save</button></span>
+  </div>
+</div></div>
+
+<!-- bulk org modal -->
+<div class="modal" id="orgModal"><div class="card pad" style="max-width:620px">
+  <h2 style="margin-bottom:6px">Paste your org structure</h2>
+  <p class="hint" style="margin-bottom:12px">One department per line: <b>Department: role, role, role</b>. Existing departments get the new roles added. Link the HODs afterwards.</p>
+  <textarea id="orgText" rows="9" placeholder="Technology: Data Analyst, Data Engineer, Software Engineer&#10;Finance: Accountant, Finance Manager&#10;Pharmacy Operations: Pharmacist, Store Manager"></textarea>
+  <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" id="oCancel">Cancel</button><button class="btn primary" id="oSave">Add to structure</button></div>
+</div></div>
+
+<!-- user modal -->
+<div class="modal" id="userModal"><div class="card pad" style="max-width:520px">
+  <h2 id="userModalH" style="margin-bottom:14px">Add user</h2>
+  <div class="form">
+    <label class="f c3">Username<input type="text" id="uUser" placeholder="username" autocomplete="off"></label>
+    <label class="f c3">Password<input type="password" id="uPass" placeholder="password" autocomplete="new-password"></label>
+    <label class="f c3">Display name<input type="text" id="uName" placeholder="e.g. Ali Khan"></label>
+    <label class="f c3">Role<select id="uRole"><option value="hod">HOD</option><option value="admin">Admin (sees everything)</option></select></label>
+    <div class="c6" id="uHodBox">
+      <div class="sub" style="font-weight:700;margin-bottom:5px">Departments this HOD heads</div>
+      <div class="pick" id="uDepts"></div>
+      <details style="margin-top:10px"><summary class="sub" style="cursor:pointer;font-weight:700">Also allow specific vacancies (optional)</summary>
+        <select id="uVacs" multiple size="5" style="width:100%;margin-top:6px"></select></details>
+    </div>
+  </div>
+  <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn" id="uCancel">Cancel</button><button class="btn primary" id="uSave">Save</button></div>
+</div></div>
+</main>
+</div></div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Candidate"></aside>
+
+<div class="modal" id="jdModal"><div class="card pad">
+  <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 id="jdTitleH" style="font-size:17px">New vacancy</h2><button class="btn sm" id="jdClose">Close</button></div>
+  <label class="f c6">Paste the full job description, or load a filled Word template / PDF (optional - the form below fills itself)
+    <textarea id="jText" rows="6" placeholder="Paste the JD from email or Word here..."></textarea></label>
+  <div class="row" style="margin:8px 0 14px"><button class="btn" id="jFile">Load a Word / PDF file</button><a class="btn" href="/api/templates/vacancy.docx" title="A Word form - fill it in and load it here, every field fills itself">Word template</a><button class="btn" id="jRead">Read it for me</button><span class="hint" id="jNote"></span></div>
+  <input type="file" id="jFileIn" accept=".pdf,.docx,.txt,.md" hidden>
+  <div class="form">
+    <label class="f c3">Designation / job title *<input type="text" id="jTitle" placeholder="Data Analyst"></label>
+    <label class="f c3">Code (optional)<input type="text" id="jCode" placeholder="auto"></label>
+    <label class="f c2">Level<select id="jSen"><option value="">auto</option><option>intern</option><option>junior</option><option selected>mid</option><option>senior</option><option>lead</option><option>manager</option><option>director</option><option>executive</option></select></label>
+    <label class="f c2">Min years<input type="number" id="jMin" min="0" step="0.5"></label>
+    <label class="f c2">Max years<input type="number" id="jMax" min="0" step="0.5"></label>
+    <label class="f c2">Minimum education<select id="jEdu"><option value="">any</option><option>intermediate</option><option>diploma</option><option selected>bachelors</option><option>masters</option></select></label>
+    <label class="f c2">Openings<input type="number" id="jOpen" min="1" value="1"></label>
+    <label class="f c2">Location<input type="text" id="jLoc" placeholder="Karachi, Pakistan"></label>
+    <label class="f c6">Department (the HOD of this department sees the vacancy; leave on auto to match by role)
+      <select id="jDept"><option value="">Auto - match by role</option></select></label>
+    <label class="f c6">Must-have skills (comma separated)<input type="text" id="jMust" placeholder="SQL, Power BI, Excel"></label>
+    <label class="f c6">Nice-to-have skills<input type="text" id="jNice" placeholder="Python, Tableau"></label>
+    <label class="f c3">Non-negotiable skills (score is capped without them)<input type="text" id="jHard" placeholder="SQL"></label>
+    <label class="f c3">Industries preferred<input type="text" id="jInd" placeholder="banking, fintech, telecom"></label>
+    <div class="c6 banner info" id="jEffective" style="margin:0;display:none"></div>
+    <label class="f c6">Extra preferred employers - only for this vacancy (shared lists are in the Companies tab)<input type="text" id="jPrefEmp" placeholder="optional"></label>
+    <input type="hidden" id="jExtraTitles">
+    <label class="f c2">Skills in search<select id="jSkillsCount"><option value="2" selected>2 (default)</option><option value="1">1</option><option value="0">0 (title only)</option></select></label>
+    <label class="f c2">Priority<select id="jPriority"><option value="0">Normal (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3 (highest)</option></select></label>
+    <label class="f c2" style="justify-content:flex-end"><button class="btn sm" id="jSearchPreview" type="button" style="align-self:flex-end">Preview search</button></label>
+    <div class="c6" id="jSearchQ" style="font-size:12px;color:var(--muted);word-break:break-all"></div>
+    <label class="f c6" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="jHardYrs"> Cap the score of anyone under the minimum years</label>
+  </div>
+  <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn" id="jCancel">Cancel</button><button class="btn primary" id="jSave">Save &amp; score everyone</button></div>
+</div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let state = {overview:null, jds:[], rows:[], sel:null, tab:"cand"};
+
+async function api(path, opt = {}) {
+  const o = {method: opt.method || "GET", headers: {"X-Sourcer-UI": "1"}};
+  if (opt.json !== undefined) { o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(opt.json); }
+  if (opt.form) o.body = opt.form;
+  const r = await fetch(path, o);
+  let data = null; try { data = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error((data && data.error) || `Request failed (${r.status})`);
+  return data;
+}
+let toastT;
+function toast(msg, err) { const t = $("#toast"); t.textContent = msg; t.className = "on" + (err ? " err" : ""); clearTimeout(toastT); toastT = setTimeout(() => t.className = "", err ? 6000 : 2600); }
+const guard = fn => async (...a) => { try { return await fn(...a); } catch (e) { toast(e.message, true); } };
+
+/* ---------- tabs ---------- */
+const TAB_INFO = {
+  cand: ["Candidates", "Ask in plain words, or filter by vacancy, score and city."],
+  jds: ["Vacancies", "Each vacancy is scored against every candidate; editing one rescores everyone."],
+  org: ["Org structure", "Departments, their roles and their HODs. This decides who sees which vacancy."],
+  li: ["LinkedIn", "Direct sourcing, pacing limits, scoring weights and AI settings."],
+  imp: ["Import", "Add LinkedIn PDFs, CVs or spreadsheets you already have."],
+  co: ["Preferred companies", "Manage the target-company lists once; every matching vacancy picks them up automatically."],
+  tt: ["Search titles", "Related job titles per role. Vacancies use them in the LinkedIn search automatically."],
+  ag: ["Agent activity", "Watch the pipeline and the AI agent work, step by step, as it happens."],
+  users: ["Users", "Logins for HODs and admins."],
+};
+function showTab(t) {
+  state.tab = t;
+  const [ti, su] = TAB_INFO[t] || ["", ""];
+  $("#pgTitle").textContent = ti;
+  $("#pgSub").textContent = (t === "jds" || t === "cand") && _curUser && _curUser.role !== "admin" ? hodScope() : su;
+  if (t === "users") loadUsers(); if (t === "org") loadOrg(); if (t === "co") loadCo(); if (t === "tt") loadTt(); if (t === "ag") agStart(); else agStop();
+  $$("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+  $$("main > section").forEach(s => s.classList.toggle("on", s.id === "t-" + t));
+  if (t === "jds") loadJds(); if (t === "li") { loadSettings(); } refresh();
+}
+$$("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.t));
+
+/* ---------- candidates ---------- */
+const cls = s => s >= 85 ? "s-hi" : s >= 75 ? "s-mid" : s >= 60 ? "s-lo" : "s-no";
+function params() {
+  const p = new URLSearchParams();
+  const role = $("#fRole").value; if (role) p.set("role", role);
+  p.set("min_score", $("#fMin").value);
+  if ($("#fCity").value.trim()) p.set("city", $("#fCity").value.trim());
+  if ($("#fStatus").value) p.set("status", $("#fStatus").value);
+  if ($("#fHide").checked) p.set("hide_done", "1");
+  return p;
+}
+function renderRows(rows, emptyMsg) {
+  state.rows = rows;
+  $("#count").textContent = rows.length ? `${rows.length} candidate${rows.length === 1 ? "" : "s"}` : "No candidates";
+  const dl = $("#dlAll"); dl.disabled = !rows.length;
+  dl.textContent = rows.length ? `Download ${rows.length} resume${rows.length === 1 ? "" : "s"} (ZIP)` : "Download all resumes (ZIP)";
+  $("#rows").innerHTML = rows.map(r => `
+    <tr data-id="${r.id}">
+      <td class="num"><span class="score ${cls(r.score)}">${r.score.toFixed(0)}%</span></td>
+      <td><div class="name">${esc(r.name)}</div><div class="sub">${r.missing.length ? "gaps: " + esc(r.missing.slice(0,3).map(x => x.replace(/_/g," ")).join(", ")) : "no key gaps"}</div></td>
+      <td>${esc(r.title || "–")}<div class="sub">${esc(r.company || "")}</div></td>
+      <td class="num">${r.years}</td><td>${esc(r.city || "–")}</td>
+      <td>${esc(r.vacancy)}</td><td><span class="pill ${r.status === "shortlisted" || r.status === "hired" ? "good" : r.status === "rejected" ? "bad" : ""}">${esc(r.status)}</span></td>
+    </tr>`).join("");
+  const e = $("#empty");
+  e.style.display = rows.length ? "none" : "block";
+  e.innerHTML = rows.length ? "" : (emptyMsg || "No candidates at this score yet. Lower the minimum score, or add profiles from the LinkedIn / Import tabs.");
+  $$("#rows tr").forEach(tr => tr.onclick = () => openCand(+tr.dataset.id));
+}
+const loadCands = guard(async () => {
+  $("#understood").innerHTML = "";
+  renderRows(await api("/api/candidates?" + params()));
+});
+const askGo = guard(async () => {
+  const text = $("#askBox").value.trim(); if (!text) return loadCands();
+  const r = await api("/api/ask", {method: "POST", json: {text, default_min: $("#fMin").value}});
+  const u = r.understood;
+  $("#fMin").value = r.min_score; $("#fMinOut").textContent = r.min_score + "%";
+  if (r.matched.length === 1 && u.role) $("#fRole").value = r.matched[0].code; else if (!u.role) $("#fRole").value = "";
+  $("#understood").innerHTML = r.message ? `<b style="color:var(--bad)">${esc(r.message)}</b>` :
+    `Understood: <b>${r.matched.length ? esc(r.matched.map(m => m.code + " " + m.title).join(" + ")) : "all vacancies"}</b> · minimum <b>${r.min_score}%</b>` +
+    (u.numbers.length > 1 ? ` <span class="sub">(you gave ${u.numbers.join(" and ")}; the lower one is used)</span>` : "");
+  renderRows(r.rows, r.message || "Nobody at this score for that vacancy yet.");
+});
+$("#askGo").onclick = askGo; $("#askBox").onkeydown = e => { if (e.key === "Enter") askGo(); };
+["fRole","fStatus","fHide"].forEach(i => $("#" + i).onchange = loadCands);
+$("#fCity").onchange = loadCands;
+$("#fMin").oninput = () => $("#fMinOut").textContent = $("#fMin").value + "%";
+$("#fMin").onchange = loadCands;
+$("#dlAll").onclick = () => {
+  if (!state.rows.length) return toast("No candidates in this list", true);
+  const p = params(); p.set("format", "zip");
+  toast(`Preparing ${state.rows.length} resume${state.rows.length === 1 ? "" : "s"} - the download starts in a moment`);
+  location.href = "/api/export?" + p;
+};
+$$("[data-x]").forEach(b => b.onclick = () => {
+  const p = params(); p.set("format", b.dataset.x);
+  if (!state.rows.length) return toast("Nothing to export for these filters", true);
+  location.href = "/api/export?" + p;
+});
+
+/* ---------- drawer ---------- */
+const openCand = guard(async id => {
+  const c = await api("/api/candidates/" + id); state.sel = c;
+  const sc = c.scores[0];
+  $("#drawer").innerHTML = `
+    <div class="dh"><div style="flex:1"><h2>${esc(c.name)}</h2><div class="sub">${esc(c.headline || "")}</div>
+      <div class="sub">${esc(c.location || "")} · ${c.total_years.toFixed(1)} yrs · ${esc(c.education)}</div></div>
+      ${sc ? `<span class="score ${cls(sc.score)}" style="font-size:18px">${sc.score.toFixed(0)}%</span>` : ""}
+      <button class="btn sm" id="dClose">✕</button></div>
+    <div class="db">
+      <div class="row">
+        ${c.has_pdf ? `<a class="btn primary" target="_blank" rel="noopener" href="/api/candidates/${c.id}/pdf">Open PDF</a><a class="btn" href="/api/candidates/${c.id}/pdf?download=1">Download</a>` : `<span class="pill warn">no PDF filed</span>`}
+        ${/^https?:\/\//i.test(c.linkedin_url || "") ? `<a class="btn" target="_blank" rel="noopener noreferrer" href="${esc(c.linkedin_url)}">LinkedIn ↗</a>` : ""}
+      </div>
+      <div><h3>Stage</h3><div class="row" id="stBtns">${["new","reviewed","shortlisted","contacted","rejected","hired"].map(s => `<button class="btn sm ${c.status === s ? "primary" : ""}" data-s="${s}">${s}</button>`).join("")}</div>
+        <input type="text" id="dNote" placeholder="Note (optional)" value="${esc(c.notes)}" style="width:100%;margin-top:8px"></div>
+      ${(c.email || c.phone) ? `<div><h3>Contact</h3><div>${esc(c.email)} ${c.email && c.phone ? "·" : ""} ${esc(c.phone)}</div></div>` : ""}
+      ${c.scores.map(s => `<div><h3>${esc(s.code)} · ${esc(s.title)} — ${s.score.toFixed(1)}%</h3>
+        <div class="bars">${Object.entries(s.breakdown).sort((a, b) => b[1].weight - a[1].weight).map(([k, v]) => `
+          <div class="bar-row"><span>${esc(k.replace(/_/g, " "))}</span><div class="track"><div class="fill" style="width:${(v.raw * 100).toFixed(0)}%"></div></div><span style="text-align:right">${(v.points).toFixed(1)}/${v.weight}</span>
+          <div class="note">${esc(v.note)}</div></div>`).join("")}</div>
+        ${s.llm_score != null ? `<div class="banner info" style="margin:12px 0 0"><b>AI agent read this profile: ${esc((s.llm_verdict || "").replace(/_/g, " "))} · ${Math.round(s.llm_score)}%</b> <span class="sub">(rubric ${Math.round(s.rubric_score ?? 0)}%)</span>
+          ${(s.llm_notes.reasons || []).length ? `<br><b>Why:</b> ${s.llm_notes.reasons.map(esc).join(" · ")}` : ""}${(s.llm_notes.concerns || []).length ? `<br><b>Concerns:</b> ${s.llm_notes.concerns.map(esc).join(" · ")}` : ""}</div>` : ""}
+        <div class="chips" style="margin-top:10px">${s.matched.map(m => `<span class="chip ok">${esc(m.replace(/_/g," "))}</span>`).join("")}${s.missing.map(m => `<span class="chip miss">missing ${esc(m.replace(/_/g," "))}</span>`).join("")}${s.flags.map(m => `<span class="chip flag">${esc(m)}</span>`).join("")}</div></div>`).join("")}
+      <div><h3>Experience</h3>${c.experiences.map(e => `<div class="exp"><b>${esc(e.title || "–")}</b> · ${esc(e.company)}<div class="sub">${esc(e.start)} – ${esc(e.end || "")} · ${e.years} yrs ${e.location ? "· " + esc(e.location) : ""}</div>${e.description ? `<div style="margin-top:4px">${esc(e.description)}</div>` : ""}</div>`).join("") || "<span class='sub'>none parsed</span>"}</div>
+      <div><h3>Education</h3>${c.educations.map(e => `<div>${esc(e.degree)} · ${esc(e.institution)} ${e.year ? "· " + e.year : ""}</div>`).join("") || "<span class='sub'>none parsed</span>"}</div>
+      <div><h3>Skills the bot found</h3><div class="chips">${c.skills.map(s => `<span class="chip">${esc(s)}</span>`).join("")}</div></div>
+      <div class="sub">Source: ${esc(c.source)} · first seen ${esc((c.first_seen || "").slice(0, 10))}</div>
+    </div>`;
+  $("#drawer").classList.add("on"); $("#scrim").classList.add("on");
+  $("#dClose").onclick = closeDrawer;
+  $$("#stBtns [data-s]").forEach(b => b.onclick = guard(async () => {
+    await api(`/api/candidates/${c.id}/status`, {method: "POST", json: {status: b.dataset.s, note: $("#dNote").value}});
+    toast(`Moved to ${b.dataset.s}`); await openCand(c.id); loadCands();
+  }));
+});
+function closeDrawer() { $("#drawer").classList.remove("on"); $("#scrim").classList.remove("on"); }
+$("#scrim").onclick = closeDrawer; document.addEventListener("keydown", e => { if (e.key === "Escape") { closeDrawer(); $("#jdModal").classList.remove("on"); } });
+
+/* ---------- vacancies ---------- */
+const loadJds = guard(async () => {
+  state.jds = await api("/api/jds");
+  const admin = _curUser && _curUser.role === "admin";
+  if (admin) { try { state.depts = (await api("/api/org")).departments; } catch (e) {} }
+  $("#jDept").innerHTML = `<option value="">Auto - match by role</option>` + (state.depts || []).map(d => `<option>${esc(d.name)}</option>`).join("");
+  $("#fRole").innerHTML = `<option value="">All vacancies</option>` + state.jds.map(j => `<option value="${esc(j.code)}">${esc(j.code)} · ${esc(j.title)}</option>`).join("");
+  $("#jdGrid").innerHTML = state.jds.map(j => `
+    <div class="card pad jd"><h2><span>${esc(j.title)}</span><span class="pill">${esc(j.code)}</span></h2>
+      <div style="margin-bottom:8px">${j.department ? `<span class="chip dept" title="${j.department_how === "role" ? "matched by role" : "assigned"}">${esc(j.department)}</span>` : (admin ? `<span class="pill warn">no department</span>` : "")}</div>
+      <div class="meta">${esc(j.seniority)} · ${j.min_years}${j.max_years ? "–" + j.max_years : "+"} yrs · ${esc(j.location)} · ${j.openings} opening${j.openings > 1 ? "s" : ""}</div>
+      <div class="chips">${j.must_have.map(s => `<span class="chip">${esc(s)}</span>`).join("")}</div>
+      <div class="stat"><div><b>${j.above_threshold}</b>at ${state.overview ? state.overview.threshold : 75}%+</div><div><b>${j.best ? j.best.toFixed(0) + "%" : "–"}</b>best</div><div><b>${j.scored}</b>scored</div></div>
+      ${j.priority > 0 ? `<span class="pill warn" style="margin-top:8px">priority ${j.priority}</span>` : ""}
+      ${(j.effective_employers||[]).length ? `<div class="sub" style="margin-top:8px"><b>Target companies:</b> ${esc(j.effective_employers.slice(0,5).join(", "))}${j.effective_employers.length > 5 ? ` +${j.effective_employers.length - 5}` : ""}</div>` : ""}
+      ${(j.effective_titles||[]).length ? `<div class="sub" style="margin-top:3px"><b>Also searched as:</b> ${esc(j.effective_titles.slice(0,4).join(", "))}${j.effective_titles.length > 4 ? ` +${j.effective_titles.length - 4}` : ""}</div>` : ""}
+      <div class="row" style="margin-top:14px"><button class="btn sm${admin ? "" : " primary"}" data-view="${esc(j.code)}">See candidates</button>${admin ? `<button class="btn sm primary" data-source="${esc(j.code)}">Source</button><button class="btn sm" data-edit="${esc(j.code)}">Edit</button><button class="btn sm danger" data-del="${esc(j.code)}">Archive</button>` : ""}</div>
+    </div>`).join("") || `<div class="card empty" style="grid-column:1/-1">${admin ? "No vacancies yet. Add your first one to start scoring candidates." : "No vacancies are assigned to you yet. Ask HR to link your department in Org structure."}</div>`;
+  $$("[data-view]").forEach(b => b.onclick = () => { $("#fRole").value = b.dataset.view; showTab("cand"); loadCands(); });
+  $$("[data-edit]").forEach(b => b.onclick = () => openJd(state.jds.find(j => j.code === b.dataset.edit)));
+  $$("[data-source]").forEach(b => b.onclick = guard(async () => {
+    await api("/api/run", {method: "POST", json: {kind: "linkedin", vacancy: b.dataset.source}});
+    toast(`Sourcing ${b.dataset.source}`); showTab("li"); refresh();
+  }));
+  $$("[data-del]").forEach(b => b.onclick = guard(async () => {
+    if (!confirm(`Archive ${b.dataset.del}? Its file moves to an _archived folder and it stops being scored.`)) return;
+    await api("/api/jds/" + encodeURIComponent(b.dataset.del), {method: "DELETE"}); toast("Archived"); loadJds();
+  }));
+});
+const jv = id => $("#" + id).value.trim();
+function openJd(j) {
+  const f = {jTitle: j?.title, jCode: j?.code, jSen: j?.seniority || "mid", jMin: j?.min_years, jMax: j?.max_years, jEdu: j?.education_min || "",
+    jOpen: j?.openings || 1, jLoc: j?.location, jMust: (j?.must_have || []).join(", "), jNice: (j?.nice_have || []).join(", "),
+    jHard: (j?.hard_requirements || []).join(", "), jInd: (j?.industries || []).join(", "),
+    jPrefEmp: (j?.preferred_employers || []).join(", "), jExtraTitles: (j?.extra_titles || []).join(", "),
+    jText: j?.raw_text || ""};
+  Object.entries(f).forEach(([k, v]) => $("#" + k).value = v ?? "");
+  $("#jSkillsCount").value = String(j?.search_skills_count ?? 2);
+  $("#jDept").value = j?.department_how === "assigned" ? j.department : "";
+  $("#jPriority").value = String(j?.priority ?? 0);
+  $("#jHardYrs").checked = !!j?.hard_min_years; $("#jNote").textContent = ""; $("#jSearchQ").textContent = "";
+  $("#jCode").readOnly = !!j; $("#jdTitleH").textContent = j ? `Edit ${j.code}` : "New vacancy";
+  $("#jdModal").classList.add("on");
+  refreshEffective();
+}
+$("#newJd").onclick = () => openJd(null);
+["#jdClose", "#jCancel"].forEach(s => $(s).onclick = () => $("#jdModal").classList.remove("on"));
+$("#jSearchPreview").onclick = guard(async () => {
+  const r = await api("/api/jds/search-preview", {method: "POST", json: {title: jv("jTitle"), must_have: jv("jMust"),
+    extra_titles: jv("jExtraTitles"), search_skills_count: +$("#jSkillsCount").value}});
+  $("#jSearchQ").innerHTML = `<b>LinkedIn search:</b> ${esc(r.query)}<br><span class="sub">family: ${esc(r.family || "none matched")}</span>`;
+});
+$("#jRead").onclick = guard(async () => {
+  const r = await api("/api/jds/preview", {method: "POST", json: {text: $("#jText").value}});
+  const tpl = r.from_template;                                       // a filled template overrides what is on the form
+  const set = (id, v) => { if (v !== null && v !== undefined && v !== "" && (tpl || !$("#" + id).value)) $("#" + id).value = v; };
+  set("jTitle", r.title); set("jMin", r.min_years || ""); set("jMax", r.max_years || ""); set("jLoc", r.location);
+  if (r.seniority) $("#jSen").value = r.seniority; if (r.education_min && r.education_min !== "none") $("#jEdu").value = r.education_min;
+  $("#jMust").value = r.must_have.join(", "); $("#jNice").value = r.nice_have.join(", ");
+  if (tpl) {
+    set("jOpen", r.openings > 1 ? r.openings : ""); set("jHard", (r.hard_requirements || []).join(", ")); set("jInd", (r.industries || []).join(", "));
+    set("jPrefEmp", (r.preferred_employers || []).join(", "));
+    if (r.department) $("#jDept").value = r.department;
+    if (r.priority) $("#jPriority").value = String(r.priority);
+    if (r.code && !$("#jCode").readOnly) $("#jCode").value = r.code;
+    $("#jText").value = r.body || "";
+  }
+  refreshEffective();
+  $("#jNote").textContent = tpl ? "Template read - every field is filled. Check the skills, then save." : "Filled in. Please check the skills - that is what candidates are scored on.";
+});
+let _effT;
+const refreshEffective = () => { clearTimeout(_effT); _effT = setTimeout(guard(async () => {
+  const el = $("#jEffective"), title = jv("jTitle");
+  if (!title) { el.style.display = "none"; return; }
+  const r = await api("/api/jds/effective", {method: "POST", json: {title, department: $("#jDept").value, text: $("#jText").value, must_have: jv("jMust"), nice_have: jv("jNice")}});
+  const bits = [];
+  bits.push(r.department ? `<b>Department:</b> ${esc(r.department)}${r.department_how === "role" ? " (matched by role)" : ""}` : `<b>Department:</b> none yet - add the role in Org structure`);
+  bits.push(`<b>Target companies added automatically:</b> ${r.employers_from_rules.length ? esc(r.employers_from_rules.join(", ")) + (r.employer_groups.length ? ` <span class="sub">(${esc(r.employer_groups.join(", "))})</span>` : "") : "none - manage lists in the Companies tab"}`);
+  const t = r.titles_from_rules.length ? r.titles_from_rules : r.suggested_titles;
+  bits.push(`<b>Related titles the bot will also search:</b> ${t.length ? esc(t.join(", ")) + ' <span class="sub">(worked out from the JD when you save)</span>' : "none found - the bot searches the title and skills only"}`);
+  el.innerHTML = bits.join("<br>"); el.style.display = "";
+}), 350); };
+["jTitle", "jDept"].forEach(id => { $("#" + id).addEventListener("input", refreshEffective); $("#" + id).addEventListener("change", refreshEffective); });
+const fileTo = guard(async (files, mode) => {
+  const fd = new FormData(); [...files].forEach(f => fd.append("files", f)); fd.append("mode", mode);
+  return await api("/api/jds/from-files", {method: "POST", form: fd});
+});
+$("#jFile").onclick = () => $("#jFileIn").click();
+$("#jFileIn").onchange = guard(async () => {
+  const f = $("#jFileIn").files; if (!f.length) return;
+  const r = await fileTo(f, "extract"); $("#jFileIn").value = "";
+  if (!r) return; $("#jText").value = r.text; $("#jNote").textContent = `Loaded ${r.filename}.`; $("#jRead").click();
+});
+$("#bulkJd").onclick = () => $("#bulkIn").click();
+$("#bulkIn").onchange = guard(async () => {
+  const f = [...$("#bulkIn").files]; if (!f.length) return;
+  if (!confirm(`Make a vacancy from each of these ${f.length} file(s)?\nThe bot reads the title, years and skills from each one; check the skills afterwards with Edit.`)) { $("#bulkIn").value = ""; return; }
+  const r = await fileTo(f, "create"); $("#bulkIn").value = ""; if (!r) return;
+  toast(`Created ${r.created.length} vacanc${r.created.length === 1 ? "y" : "ies"}` + (r.failed.length ? `; ${r.failed.length} failed: ` + r.failed.map(x => x.file + " (" + x.error + ")").join("; ") : ""), r.failed.length > 0 && !r.created.length);
+  loadJds(); refresh();
+});
+$("#jSave").onclick = guard(async () => {
+  if (!jv("jTitle")) throw new Error("Enter the designation / job title");
+  const r = await api("/api/jds", {method: "POST", json: {title: jv("jTitle"), code: jv("jCode"), seniority: $("#jSen").value,
+    min_years: jv("jMin"), max_years: jv("jMax"), education_min: $("#jEdu").value, openings: jv("jOpen"), location: jv("jLoc"),
+    must_have: jv("jMust"), nice_have: jv("jNice"), hard_requirements: jv("jHard"), industries: jv("jInd"),
+    preferred_employers: jv("jPrefEmp"), extra_titles: jv("jExtraTitles"),
+    search_skills_count: +$("#jSkillsCount").value, priority: +$("#jPriority").value,
+    hard_min_years: $("#jHardYrs").checked, department: $("#jDept").value, text: $("#jText").value}});
+  $("#jdModal").classList.remove("on"); toast(`Saved ${r.code}; rescored ${r.rescored} matches`); loadJds(); refresh(); loadCands();
+});
+
+/* ---------- linkedin ---------- */
+const SET_IDS = {sCap:"daily_profile_cap", sSess:"session_minutes_max", sFrom:"window_start", sTo:"window_end", sLoc:"location_filter", sPages:"max_pages_per_search", sGeo:"geo_urn", sBatch:"profiles_per_vacancy"};
+const loadSettings = guard(async () => {
+  const d = await api("/api/settings");
+  const s = d.linkedin;
+  Object.entries(SET_IDS).forEach(([id, k]) => { if (document.activeElement !== $("#" + id)) $("#" + id).value = s[k] ?? ""; });
+  $("#sBrowser").value = s.browser || "auto";
+  $("#sBrowserNote").textContent = (d.browsers_found && d.browsers_found.length) ? "Found on this PC: " + d.browsers_found.map(b => b === "edge" ? "Edge" : "Chrome").join(", ") : "Chrome / Edge not found - the built-in browser will be used";
+  $("#sRamp").checked = !!s.ramp_up; $("#sWeek").checked = !!s.weekdays_only; $("#sDeep").checked = !!s.deep_experience;
+  // weights
+  if (typeof loadWeights === "function") loadWeights(d.weights);
+});
+$("#saveSet").onclick = guard(async () => {
+  const li = {daily_profile_cap: +$("#sCap").value, session_minutes_max: +$("#sSess").value, window_start: $("#sFrom").value, window_end: $("#sTo").value,
+    location_filter: $("#sLoc").value, max_pages_per_search: +$("#sPages").value, geo_urn: $("#sGeo").value, ramp_up: $("#sRamp").checked,
+    weekdays_only: $("#sWeek").checked, deep_experience: $("#sDeep").checked, profiles_per_vacancy: +$("#sBatch").value, browser: $("#sBrowser").value};
+  await api("/api/settings", {method: "POST", json: {linkedin: li}}); toast("Settings saved"); $("#sGeo").value = ""; loadSettings(); refresh();
+});
+const WEIGHT_DIMS = [
+  ["must_have_skills", "Must-Have Skills"], ["nice_have_skills", "Nice-to-Have Skills"],
+  ["experience_years", "Experience Years"], ["title_relevance", "Title Relevance"],
+  ["seniority_fit", "Seniority Fit"], ["domain_industry", "Domain / Industry"],
+  ["education", "Education"], ["location", "Location"],
+  ["certifications", "Certifications"], ["projects", "Projects"]
+];
+(function initWeights() {
+  const grid = $("#weightsGrid");
+  if (!grid) return;
+  WEIGHT_DIMS.forEach(([k, label]) => {
+    const id = "w_" + k;
+    grid.innerHTML += `<label style="display:flex;align-items:center;gap:8px;font-size:13px">
+      <span style="min-width:120px">${esc(label)}</span>
+      <input type="range" id="${id}" min="0" max="50" value="10" style="flex:1">
+      <span id="${id}_v" style="min-width:24px;text-align:right">10</span>
+    </label>`;
+  });
+  WEIGHT_DIMS.forEach(([k]) => {
+    const sl = $("#w_" + k), sp = $("#w_" + k + "_v");
+    sl.oninput = () => { sp.textContent = sl.value; updateWTotal(); };
+  });
+})();
+function updateWTotal() {
+  let t = 0; WEIGHT_DIMS.forEach(([k]) => t += +$("#w_" + k).value);
+  const el = $("#wTotal"); if (el) el.textContent = t;
+}
+function loadWeights(weights) {
+  if (!weights) return;
+  WEIGHT_DIMS.forEach(([k]) => {
+    const sl = $("#w_" + k), sp = $("#w_" + k + "_v");
+    if (sl && weights[k] != null) { sl.value = weights[k]; sp.textContent = Math.round(weights[k]); }
+  });
+  updateWTotal();
+}
+$("#saveWeights").onclick = guard(async () => {
+  const w = {};
+  WEIGHT_DIMS.forEach(([k]) => w[k] = +$("#w_" + k).value);
+  await api("/api/settings", {method: "POST", json: {weights: w}}); toast("Weights saved"); loadSettings();
+});
+$("#liLogin").onclick = guard(async () => { await api("/api/run", {method: "POST", json: {kind: "login"}}); toast("Your browser is opening LinkedIn - sign in (Google works), then close that window"); refresh(); });
+$("#liStart").onclick = guard(async () => { await api("/api/run", {method: "POST", json: {kind: "linkedin"}}); toast("Sourcing started"); refresh(); });
+$("#liTest").onclick = guard(async () => { await api("/api/run", {method: "POST", json: {kind: "linkedin", limit: 1}}); toast("Opening one profile as a test"); refresh(); });
+$("#liStop").onclick = guard(async () => { await api("/api/job/stop", {method: "POST", json: {}}); refresh(); });
+$("#procGo").onclick = guard(async () => { await api("/api/run", {method: "POST", json: {kind: "files"}}); toast("Processing"); refresh(); });
+
+function renderLi(o) {
+  const l = o.linkedin, job = o.job, running = job.state === "running" || job.state === "stopping";
+  const pw = l.playwright, ok = pw && l.logged_in;
+  $("#liSteps").innerHTML = [
+    [pw, pw ? "Browser automation installed" : "Browser automation missing - run:  pip install playwright"],
+    [l.logged_in, l.logged_in ? "Logged in to LinkedIn" : "Not logged in yet - press “Log in to LinkedIn”"],
+    [l.in_window ? 1 : 2, l.in_window ? "Inside your working hours" : "Outside your working hours - pressing Start still works, scheduled runs wait"],
+  ].map(([g, t]) => `<div class="step"><span class="dot ${g === 2 ? "mid" : g ? "ok" : "no"}"></span><span>${esc(t)}</span></div>`).join("");
+  $("#liUse").innerHTML = `<b>${l.used} / ${l.cap}</b> profiles opened today <span class="sub">(${l.searches} searches${l.cap < l.configured_cap ? "; allowance is still growing toward " + l.configured_cap : ""})</span>`;
+  $("#liBar").style.width = Math.min(100, 100 * l.used / Math.max(1, l.cap)) + "%";
+  const b = [];
+  if (l.cooldown_until) b.push(`<div class="banner bad"><b>Paused until ${esc(l.cooldown_until.replace("T", " "))}.</b> LinkedIn showed a warning (${esc(l.cooldown_reason)}). Open LinkedIn yourself and complete anything it asks for. <button class="btn sm" id="clrCd" style="margin-left:8px">I resolved it - resume</button></div>`);
+  if (job.state === "error") b.push(`<div class="banner bad">The last job failed. See the activity log below.</div>`);
+  $("#liBanners").innerHTML = b.join("");
+  const c = $("#clrCd"); if (c) c.onclick = guard(async () => { if (!confirm("Resume only after you have completed LinkedIn's verification yourself. Continue?")) return; await api("/api/linkedin/clear-cooldown", {method: "POST", json: {}}); refresh(); });
+  $("#liStart").disabled = $("#liTest").disabled = running || !ok || !!l.cooldown_until; $("#liLogin").disabled = running || !pw;
+  $("#liStop").disabled = !running; $("#procGo").disabled = running;
+  const text = job.log.length ? job.log.join("\n") : "Nothing running.";
+  for (const id of ["#liLog", "#impLog"]) { const el = $(id); const atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 30; el.textContent = text; if (atEnd) el.scrollTop = el.scrollHeight; }
+}
+function renderTop(o) {
+  $("#pCand").textContent = `${o.candidates} candidates · ${o.vacancies} vacancies`;
+  const l = o.linkedin, p = $("#pLi");
+  if (!l) { p.style.display = "none"; return; }
+  p.style.display = "";
+  const busy = o.job.state === "running";
+  $("#pLiT").textContent = l.cooldown_until ? "LinkedIn paused" : busy ? "working…" : `LinkedIn ${l.used}/${l.cap} today`;
+  p.className = "pill " + (l.cooldown_until ? "bad" : busy ? "warn working" : "");
+  $("#inboxNote").textContent = `${o.inbox.pdfs} PDF(s) and ${o.inbox.sheets} sheet(s) waiting`;
+}
+let wasRunning = false;
+const refresh = async () => {
+  try {
+    const o = await api("/api/overview"); state.overview = o; renderTop(o); if (o.linkedin) renderLi(o);
+    const running = o.job.state === "running" || o.job.state === "stopping";
+    if (wasRunning && !running) { loadCands(); if (state.tab === "jds") loadJds(); }
+    wasRunning = running;
+  } catch (e) { $("#pLiT").textContent = "offline"; $("#pLi").className = "pill bad"; }
+};
+setInterval(() => { if (!document.hidden) refresh(); }, 2500);
+
+/* ---------- import ---------- */
+const drop = $("#drop"), fileIn = $("#fileIn");
+drop.onclick = () => fileIn.click();
+["dragenter", "dragover"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", ev => upload(ev.dataTransfer.files)); fileIn.onchange = () => upload(fileIn.files);
+const upload = guard(async files => {
+  if (!files.length) return; const fd = new FormData(); [...files].forEach(f => fd.append("files", f));
+  const r = await api("/api/upload", {method: "POST", form: fd});
+  toast(`Added ${r.pdfs} PDF(s) and ${r.sheets} sheet(s)${r.skipped.length ? "; skipped " + r.skipped.length : ""}`, !(r.pdfs + r.sheets));
+  fileIn.value = ""; refresh();
+});
+
+/* ---------- users (admin) ---------- */
+let _curUser = null;  // auth state
+let _editUid = null;  // user being edited
+
+const hodScope = () => {
+  const d = (_curUser && _curUser.departments) || [];
+  return d.length ? "Showing the vacancies and candidates of: " + d.join(", ") : "Showing only the vacancies assigned to you.";
+};
+async function authInit() {
+  try {
+    const me = await api("/api/me");
+    _curUser = me;
+    const nm = me.display_name || me.username;
+    $("#hVer").textContent = "Talent Pool v" + (me.version || "?"); $("#hUser").textContent = nm; $("#hRole").textContent = me.role === "admin" ? "Admin" : "HOD";
+    $("#hAvatar").textContent = (nm.trim()[0] || "?").toUpperCase();
+    const admin = me.role === "admin";
+    if (me.cloud && admin) {
+      $("#liCloud").style.display = ""; $("#liLocal").style.display = "none";
+      $("#liCloudCmd").textContent = "On your PC (once):\n  set SOURCER_DATA_DIR=collector_data\n  python -m sourcer ui          <- press 'Log in to LinkedIn', then close the browser\n\nEvery time you want to source:\n  set SOURCER_DATA_DIR=collector_data\n  set INGEST_TOKEN=<the INGEST_TOKEN you set on the server>\n  python -m sourcer collect --url " + location.origin;
+    }
+    ["tabOrg", "tabCo", "tabTt", "tabAg", "tabUsers", "sepAdmin"].forEach(id => $("#" + id).style.display = admin ? "" : "none");
+    ["tabLi", "tabImp"].forEach(id => $("#" + id).style.display = admin ? "" : "none");
+    if (!admin) $("#sepAdmin").style.display = "none";
+    $("#pwBanner").innerHTML = me.default_password ? `<div class="banner warn"><b>Change the default admin password.</b> Anyone who knows <code>admin123</code> can open this app. <button class="btn sm" id="pwFix" style="margin-left:8px">Change it now</button></div>` : "";
+    if ($("#pwFix")) $("#pwFix").onclick = () => { showTab("users"); };
+    $("#jdAdminBtns").style.display = admin ? "" : "none";
+    $("#pgSub").textContent = admin ? TAB_INFO[state.tab][1] : hodScope();
+  } catch (e) { /* not logged in - the server redirects */ }
+}
+
+$("#hLogout").onclick = guard(async () => {
+  await api("/api/logout", {method: "POST"});
+  location.href = "/login";
+});
+
+const deptChips = names => (names && names.length) ? names.map(n => `<span class="chip dept">${esc(n)}</span>`).join(" ") : '<span class="sub">none</span>';
+const loadUsers = guard(async () => {
+  const [users, org] = await Promise.all([api("/api/users"), api("/api/org")]);
+  state.depts = org.departments;
+  $("#userRows").innerHTML = users.map(u => `<tr>
+    <td><b>${esc(u.username)}</b></td>
+    <td>${esc(u.display_name || "–")}</td>
+    <td><span class="pill ${u.role === "admin" ? "good" : ""}">${esc(u.role)}</span></td>
+    <td>${u.role === "admin" ? '<span class="sub">all departments</span>' : deptChips(u.departments)}</td>
+    <td class="num">${u.visible_vacancies === null ? "all" : u.visible_vacancies + " vacanc" + (u.visible_vacancies === 1 ? "y" : "ies")}</td>
+    <td class="row" style="gap:4px"><button class="btn sm" data-uedit="${u.id}">Edit</button>${u.id !== _curUser.id ? `<button class="btn sm danger" data-udel="${u.id}" data-uname="${esc(u.username)}">Delete</button>` : '<span class="sub">you</span>'}</td>
+  </tr>`).join("") || '<tr><td colspan="6" class="sub">No users yet</td></tr>';
+  $$("[data-uedit]").forEach(b => b.onclick = () => {
+    const u = users.find(x => x.id === +b.dataset.uedit);
+    if (u) openUserModal(u);
+  });
+  $$("[data-udel]").forEach(b => b.onclick = guard(async () => {
+    if (!confirm(`Delete user "${b.dataset.uname}"? This cannot be undone.`)) return;
+    await api("/api/users/" + b.dataset.udel, {method: "DELETE"});
+    toast("User deleted"); loadUsers();
+  }));
+});
+
+function openUserModal(u) {
+  _editUid = u ? u.id : null;
+  $("#userModalH").textContent = u ? `Edit ${u.username}` : "Add user";
+  $("#uUser").value = u ? u.username : ""; $("#uUser").readOnly = !!u;
+  $("#uPass").value = ""; $("#uPass").placeholder = u ? "(leave blank to keep)" : "password";
+  $("#uName").value = u ? (u.display_name || "") : "";
+  $("#uRole").value = u ? u.role : "hod";
+  const mine = (u && u.departments) || [];
+  $("#uDepts").innerHTML = (state.depts || []).map(d => `<label><input type="checkbox" value="${esc(d.name)}" ${mine.includes(d.name) ? "checked" : ""}>${esc(d.name)}<span class="sub">${d.roles.length} role${d.roles.length === 1 ? "" : "s"}</span></label>`).join("")
+    || '<div class="sub" style="padding:8px">No departments yet. Add them in Org structure first.</div>';
+  $("#uVacs").innerHTML = (state.jds || []).map(j => `<option value="${esc(j.code)}" ${u && (u.vacancies || []).includes(j.code) ? "selected" : ""}>${esc(j.code)} · ${esc(j.title)}</option>`).join("");
+  $("#uRole").disabled = !!u && u.id === _curUser.id;            // you cannot demote yourself
+  $("#uHodBox").style.display = $("#uRole").value === "hod" ? "" : "none";
+  $("#userModal").classList.add("on");
+}
+$("#uRole").onchange = () => $("#uHodBox").style.display = $("#uRole").value === "hod" ? "" : "none";
+
+$("#newUser").onclick = guard(async () => { if (!state.depts) state.depts = (await api("/api/org")).departments; openUserModal(null); });
+$("#uCancel").onclick = () => $("#userModal").classList.remove("on");
+
+$("#uSave").onclick = guard(async () => {
+  const username = $("#uUser").value.trim();
+  const password = $("#uPass").value;
+  const display_name = $("#uName").value.trim();
+  const role = $("#uRole").value;
+  const departments = $$("#uDepts input:checked").map(i => i.value);
+  const vacancies = [...$("#uVacs").selectedOptions].map(o => o.value);
+  if (!username) throw new Error("Username is required");
+  if (!_editUid && !password) throw new Error("Password is required for new users");
+  const body = {username, display_name, role, departments, vacancies};
+  if (password) body.password = password;
+  if (_editUid) {
+    await api("/api/users/" + _editUid, {method: "PUT", json: body});
+    toast("User updated");
+  } else {
+    await api("/api/users", {method: "POST", json: body});
+    toast("User created");
+  }
+  $("#userModal").classList.remove("on"); loadUsers();
+  if (_editUid === _curUser.id && password) authInit();            // clears the default-password banner
+});
+
+/* ---------- agent activity (admin) ---------- */
+const AG = {last: 0, timer: null, busy: false, stages: ["extract", "parse", "store", "score", "agent"],
+            labels: {extract: "Extracting", parse: "Parsing", store: "Saving", score: "Scoring", agent: "AI agent", job: "Job", error: "Problem"}};
+const hhmmss = ts => { const d = new Date(ts); return isNaN(d) ? "" : d.toLocaleTimeString([], {hour12: false}); };
+function agRow(e) {
+  const det = e.detail || {};
+  const bits = [];
+  if (det.reasons && det.reasons.length) bits.push("Why: " + det.reasons.map(esc).join(" · "));
+  if (det.concerns && det.concerns.length) bits.push("Concerns: " + det.concerns.map(esc).join(" · "));
+  if (det.keywords) bits.push("Search: " + esc(det.keywords));
+  if (det.issues && det.issues.length) bits.push("Parser notes: " + det.issues.map(esc).join(", "));
+  if (det.tokens) bits.push(det.tokens + " tokens");
+  return `<div class="ev ${e.level}" data-id="${e.id}"><time>${hhmmss(e.ts)}</time><span class="sgc"><span class="sg ${e.stage}">${AG.labels[e.stage] || e.stage}</span></span>
+    <div>${e.candidate ? `<span class="who">${esc(e.candidate)}</span>` : ""}${e.vacancy ? `<span class="pill vac">${esc(e.vacancy)}</span>` : ""} ${esc(e.message)}
+    ${bits.length ? `<div class="det">${bits.join("<br>")}</div>` : ""}</div></div>`;
+}
+function agNow(st) {
+  const now = $("#agNow"), live = st.live;
+  now.classList.toggle("live", !!live);
+  const who = st.candidate ? `<b>${esc(st.candidate)}</b>` : "";
+  if (live) {
+    const doing = {extract: "Extracting the profile", parse: "Structuring the profile", store: "Saving the profile", score: "Scoring against the vacancies",
+                   agent: "The AI agent is reading", job: "Working", error: "Hit a problem"}[st.stage] || "Working";
+    $("#agNowT").innerHTML = `${doing}${st.candidate ? ": " : ""}${st.candidate ? esc(st.candidate) : ""}${st.vacancy ? ` <span class="pill">${esc(st.vacancy)}</span>` : ""}`;
+    $("#agNowS").textContent = st.message + (st.seconds_ago > 20 ? ` (${st.seconds_ago}s ago - waiting for the next step)` : "");
+  } else {
+    $("#agNowT").textContent = st.state === "running" ? "Working…" : "Idle - nothing is running";
+    $("#agNowS").textContent = st.message ? `Last step ${st.seconds_ago < 90 ? st.seconds_ago + "s" : Math.round(st.seconds_ago / 60) + " min"} ago: ${st.message}` : "No activity yet. Import profiles or run the agent.";
+  }
+  $("#agPipe").innerHTML = AG.stages.map(k => `<div class="st ${live && st.stage === k ? "on" : ""}">${AG.labels[k]}<b>${(st.counts || {})[k] || 0}</b>last hour</div>`).join("") +
+    `<div class="st ${(st.counts || {}).error ? "" : ""}" style="${(st.counts || {}).error ? "border-color:var(--bad);color:var(--bad)" : ""}">Problems<b>${(st.counts || {}).error || 0}</b>last hour</div>`;
+}
+const agPoll = async (reset) => {
+  if (AG.busy) return; AG.busy = true;
+  try {
+    if (reset) { AG.last = 0; $("#agFeed").innerHTML = ""; }
+    const q = new URLSearchParams({after: AG.last, limit: AG.last ? 300 : 150});
+    if ($("#agStage").value === "error") q.set("level", "problems"); else if ($("#agStage").value) q.set("stage", $("#agStage").value);
+    if ($("#agCand").value.trim()) q.set("candidate", $("#agCand").value.trim());
+    const r = await api("/api/events?" + q);
+    agNow(r.status);
+    if (r.events.length) {
+      const feed = $("#agFeed"), atEnd = feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 40;
+      feed.insertAdjacentHTML("beforeend", r.events.map(agRow).join(""));
+      AG.last = r.events[r.events.length - 1].id;
+      while (feed.children.length > 800) feed.firstChild.remove();
+      if ((atEnd || reset) && !$("#agPause").checked) feed.scrollTop = feed.scrollHeight;
+    } else if (reset && !$("#agFeed").innerHTML) {
+      $("#agFeed").innerHTML = '<div class="empty">Nothing logged yet. Steps appear here the moment the pipeline or the agent does something.</div>';
+    }
+    agKeys(r.status.agent);
+  } catch (e) { /* offline blips are fine */ } finally { AG.busy = false; }
+};
+const agStart = () => { agLoadSettings(); agPoll(true); clearInterval(AG.timer); AG.timer = setInterval(() => { if (!document.hidden) agPoll(false); }, 1500); };
+const agStop = () => { clearInterval(AG.timer); AG.timer = null; };
+function agKeys(a) {
+  if (!a) return;
+  $("#agKeys").innerHTML = (AG.provs || []).filter(p => p.id !== "off").map(p =>
+    `<div class="step"><span class="dot ${p.has_key ? "ok" : "no"}"></span><span><b>${esc(p.label)}</b>: ${p.has_key ? esc(p.env) + " found" : esc(p.env) + " is not set on the server"}</span></div>`).join("") +
+    `<div class="step"><span class="dot ${a.ready ? "ok" : "mid"}"></span><span>${a.ready ? `Agent ready: ${esc(a.provider)} / ${esc(a.model)}` : "Agent not running: " + esc(a.why)}</span></div>`;
+}
+const agLoadSettings = guard(async () => {
+  const d = await api("/api/settings"), a = d.agent;
+  AG.provs = [{id: "off", label: "Off", env: ""}, ...a.providers];
+  $("#agProv").innerHTML = AG.provs.map(p => `<option value="${p.id}">${esc(p.label)}</option>`).join("");
+  $("#agProv").value = a.provider; $("#agModel").value = a.model; $("#agTop").value = a.top_n; $("#agMin").value = a.min_rubric; $("#agW").value = a.weight;
+  const defm = (AG.provs.find(p => p.id === a.provider) || {}).default_model || "";
+  $("#agModel").placeholder = defm ? `default: ${defm}` : "";
+  agKeys({ready: a.ready, why: a.why, provider: a.provider, model: a.model || defm});
+});
+$("#agProv").onchange = () => { const p = AG.provs.find(x => x.id === $("#agProv").value) || {}; $("#agModel").placeholder = p.default_model ? `default: ${p.default_model}` : ""; };
+$("#agSave").onclick = guard(async () => {
+  await api("/api/settings", {method: "POST", json: {agent: {provider: $("#agProv").value, model: $("#agModel").value, top_n: +$("#agTop").value, min_rubric: +$("#agMin").value, weight: +$("#agW").value}}});
+  toast("Agent settings saved"); $("#agSaved").textContent = ""; agLoadSettings(); agPoll(false);
+});
+$("#agRun").onclick = guard(async () => { await api("/api/run", {method: "POST", json: {kind: "agent"}}); toast("Agent started - watch the log below"); agPoll(false); });
+$("#agRunAll").onclick = guard(async () => { await api("/api/run", {method: "POST", json: {kind: "agent", force: true}}); toast("The agent is re-reading everyone"); agPoll(false); });
+$("#agStop").onclick = guard(async () => { await api("/api/job/stop", {method: "POST", json: {}}); agPoll(false); });
+$("#agTest").onclick = guard(async () => {
+  $("#agTestOut").textContent = "Testing…";
+  try {
+    const r = await api("/api/agent/test", {method: "POST", json: {}});
+    $("#agTestOut").innerHTML = `<b style="color:var(--brand-text)">Working.</b> ${esc(r.provider)} / ${esc(r.model)} answered in ${r.seconds}s and scored a made-up profile ${Math.round(r.score)}% (${esc(r.verdict.replace(/_/g, " "))}).`;
+  } catch (e) { $("#agTestOut").innerHTML = `<b style="color:var(--bad)">Not working:</b> ${esc(e.message)}`; }
+  agPoll(false);
+});
+$("#agClear").onclick = guard(async () => { if (!confirm("Clear the whole activity log?")) return; await api("/api/events", {method: "DELETE"}); agPoll(true); });
+["agStage", "agCand"].forEach(id => $("#" + id).addEventListener("input", () => agPoll(true)));
+
+/* ---------- preferred companies (admin) ---------- */
+let _editGroup = null;
+const chipList = (items, cls = "") => (items && items.length) ? items.map(x => `<span class="chip ${cls}">${esc(x)}</span>`).join("") : "";
+$$("input[name=cmode]").forEach(r => r.onchange = guard(async () => {
+  await api("/api/settings", {method: "POST", json: {linkedin: {company_mode: r.value}}}); toast("Search order saved");
+}));
+const loadCo = guard(async () => {
+  const st = await api("/api/settings");
+  $$("input[name=cmode]").forEach(r => r.checked = r.value === (st.linkedin.company_mode || "priority_first"));
+  const o = await api("/api/employer-groups");
+  state.groups = o.groups; state.deptNames = o.departments;
+  $("#groupGrid").innerHTML = o.groups.map(g => `
+    <div class="card pad dept"><h2><span>${esc(g.name)}</span><button class="btn sm" data-gedit="${g.id}">Edit</button></h2>
+      <div class="lbl">Companies (${g.companies.length})</div><div class="chips">${chipList(g.companies, "ok")}</div>
+      <div class="lbl">Applies to</div><div class="chips">${g.scope === "all" ? '<span class="pill brand">every vacancy</span>' : chipList(g.departments, "dept") + chipList(g.roles)}</div>
+      <div class="lbl">Reflected on ${g.vacancies.length} vacanc${g.vacancies.length === 1 ? "y" : "ies"}</div><div class="chips">${g.vacancies.map(v => `<span class="chip">${esc(v.code)} · ${esc(v.title)}</span>`).join("") || '<span class="sub">none right now</span>'}</div>
+    </div>`).join("") || `<div class="card empty" style="grid-column:1/-1">No company lists yet. Add your first one - e.g. the top employers in Karachi for your tech roles.</div>`;
+  $$("[data-gedit]").forEach(b => b.onclick = () => openGroup(o.groups.find(g => g.id === +b.dataset.gedit)));
+});
+function openGroup(g) {
+  _editGroup = g || null;
+  $("#groupModalH").textContent = g ? `Edit ${g.name}` : "Add company list";
+  $("#gName").value = g ? g.name : ""; $("#gCompanies").value = g ? g.companies.join(", ") : "";
+  $("#gRoles").value = g ? g.roles.join(", ") : "";
+  const mine = new Set(g ? g.departments : []);
+  $("#gDepts").innerHTML = (state.deptNames || []).map(d => `<label><input type="checkbox" value="${esc(d)}" ${mine.has(d) ? "checked" : ""}>${esc(d)}</label>`).join("")
+    || '<div class="sub" style="padding:8px">No departments yet (Org structure tab). You can still scope by roles, or leave both empty for every vacancy.</div>';
+  $("#gDelete").style.display = g ? "" : "none";
+  $("#groupModal").classList.add("on");
+}
+$("#newGroup").onclick = guard(async () => { if (!state.deptNames) state.deptNames = (await api("/api/employer-groups")).departments; openGroup(null); });
+$("#gCancel").onclick = () => $("#groupModal").classList.remove("on");
+$("#gSave").onclick = guard(async () => {
+  const body = {name: $("#gName").value, companies: $("#gCompanies").value, roles: $("#gRoles").value, departments: $$("#gDepts input:checked").map(i => i.value)};
+  $("#gSave").disabled = true;
+  try {
+    const r = _editGroup ? await api("/api/employer-groups/" + _editGroup.id, {method: "PUT", json: body}) : await api("/api/employer-groups", {method: "POST", json: body});
+    $("#groupModal").classList.remove("on"); toast(`Saved - rescored ${r.rescored} matches`); loadCo();
+  } finally { $("#gSave").disabled = false; }
+});
+$("#gDelete").onclick = guard(async () => {
+  if (!_editGroup || !confirm(`Delete "${_editGroup.name}"? Its companies disappear from every vacancy.`)) return;
+  await api("/api/employer-groups/" + _editGroup.id, {method: "DELETE"});
+  $("#groupModal").classList.remove("on"); toast("Deleted"); loadCo();
+});
+
+/* ---------- search titles (admin) ---------- */
+let _editTitle = null;
+const loadTt = guard(async () => {
+  const o = await api("/api/title-rules");
+  state.titleRules = o.rules;
+  $("#titleGrid").innerHTML = o.rules.map(r => `
+    <div class="card pad dept"><h2><span>${esc(r.role)}</span><button class="btn sm" data-tedit="${r.id}">Edit</button></h2>
+      ${r.auto ? `<span class="pill brand">${r.source === "ai" ? "AI read the JD" : "worked out from the JD"}</span>` : '<span class="pill">edited by you</span>'}
+      <div class="lbl">Also search for</div><div class="chips">${chipList(r.titles, "ok") || '<span class="sub">no related roles found - the bot searches this exact title and the key skills</span>'}</div>
+      <div class="lbl">Used by ${r.vacancies.length} vacanc${r.vacancies.length === 1 ? "y" : "ies"}</div><div class="chips">${r.vacancies.map(v => `<span class="chip">${esc(v.code)} · ${esc(v.title)}</span>`).join("") || '<span class="sub">none right now</span>'}</div>
+    </div>`).join("") || `<div class="card empty" style="grid-column:1/-1">No rules yet. They appear by themselves when you add vacancies, or press <b>Draft for all vacancies</b>.</div>`;
+  $$("[data-tedit]").forEach(b => b.onclick = () => openTitle(o.rules.find(r => r.id === +b.dataset.tedit)));
+});
+function openTitle(r) {
+  _editTitle = r || null;
+  $("#titleModalH").textContent = r ? `Edit ${r.role}` : "Add search-title rule";
+  $("#tRole").value = r ? r.role : ""; $("#tTitles").value = r ? r.titles.join(", ") : ""; $("#tSuggestNote").textContent = "";
+  $("#tDelete").style.display = r ? "" : "none";
+  $("#titleModal").classList.add("on");
+}
+$("#newTitle").onclick = () => openTitle(null);
+$("#tCancel").onclick = () => $("#titleModal").classList.remove("on");
+$("#tSuggest").onclick = guard(async () => {
+  const r = await api("/api/title-rules/suggest?role=" + encodeURIComponent($("#tRole").value));
+  $("#tSuggestNote").textContent = r.titles.length ? "" : "No suggestions for this role - type the titles yourself.";
+  if (r.titles.length) $("#tTitles").value = r.titles.join(", ");
+});
+$("#tSave").onclick = guard(async () => {
+  const body = {role: $("#tRole").value, titles: $("#tTitles").value};
+  if (_editTitle) await api("/api/title-rules/" + _editTitle.id, {method: "PUT", json: body}); else await api("/api/title-rules", {method: "POST", json: body});
+  $("#titleModal").classList.remove("on"); toast("Saved"); loadTt();
+});
+$("#tDelete").onclick = guard(async () => {
+  if (!_editTitle || !confirm(`Delete the rule for "${_editTitle.role}"?`)) return;
+  await api("/api/title-rules/" + _editTitle.id, {method: "DELETE"});
+  $("#titleModal").classList.remove("on"); toast("Deleted"); loadTt();
+});
+$("#genTitles").onclick = guard(async () => { const r = await api("/api/title-rules/generate", {method: "POST", json: {force: true}}); toast(`Re-read the JDs - ${r.created} rule(s) updated`); loadTt(); });
+
+/* ---------- bulk add vacancies from a sheet ---------- */
+$("#bulkSheet").onclick = () => { $("#bulkResult").innerHTML = ""; $("#bulkModal").classList.add("on"); };
+$("#bulkClose").onclick = () => { $("#bulkModal").classList.remove("on"); loadJds(); refresh(); };
+$("#bulkSheetPick").onclick = () => $("#bulkSheetIn").click();
+$("#bulkSheetIn").onchange = guard(async () => {
+  const f = $("#bulkSheetIn").files[0]; if (!f) return;
+  const fd = new FormData(); fd.append("file", f);
+  $("#bulkResult").innerHTML = '<span class="sub">Reading and scoring - this can take a minute…</span>';
+  try {
+    const r = await api("/api/jds/from-sheet", {method: "POST", form: fd});
+    $("#bulkResult").innerHTML = `
+      <div class="banner ${r.created.length ? "info" : "warn"}"><b>${r.created.length} vacanc${r.created.length === 1 ? "y" : "ies"} added.</b> ${r.created.map(c => `${esc(c.code)} ${esc(c.title)}`).join(" · ")}</div>
+      ${r.skipped.length ? `<div class="banner warn"><b>${r.skipped.length} skipped</b> (a vacancy with that title already exists): ${r.skipped.map(x => `row ${x.row} ${esc(x.title)} = ${esc(x.code)}`).join("; ")}</div>` : ""}
+      ${r.failed.length ? `<div class="banner bad"><b>${r.failed.length} row(s) not added:</b> ${r.failed.map(x => `row ${x.row}: ${esc(x.error)}`).join("; ")}</div>` : ""}
+      ${r.unknown_columns.length ? `<div class="sub">Ignored columns: ${r.unknown_columns.map(esc).join(", ")}</div>` : ""}`;
+  } catch (e) { $("#bulkResult").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; }
+  finally { $("#bulkSheetIn").value = ""; }
+});
+
+/* ---------- org structure (admin) ---------- */
+let _editDept = null, _orgHods = [];
+const loadOrg = guard(async () => {
+  const o = await api("/api/org");
+  state.depts = o.departments; _orgHods = o.hods;
+  const warn = [];
+  if (o.unassigned.length) warn.push(`<div class="banner warn"><b>${o.unassigned.length} vacanc${o.unassigned.length === 1 ? "y has" : "ies have"} no department</b> - no HOD can see ${o.unassigned.length === 1 ? "it" : "them"} yet.
+    <div class="row" style="margin-top:8px">${o.unassigned.map(v => `<span class="row" style="gap:6px"><span class="chip">${esc(v.code)} · ${esc(v.title)}</span>
+      <select data-assign="${esc(v.code)}"><option value="">assign to…</option>${o.departments.map(d => `<option>${esc(d.name)}</option>`).join("")}</select></span>`).join("")}</div></div>`);
+  const hodsWithout = o.hods.filter(h => !o.departments.some(d => d.hods.some(x => x.id === h.id)));
+  if (hodsWithout.length) warn.push(`<div class="banner info">${hodsWithout.map(h => esc(h.display_name)).join(", ")} ${hodsWithout.length === 1 ? "is a HOD" : "are HODs"} without a department yet.</div>`);
+  $("#orgWarn").innerHTML = warn.join("");
+  $$("[data-assign]").forEach(sel => sel.onchange = guard(async () => {
+    if (!sel.value) return;
+    await api(`/api/jds/${encodeURIComponent(sel.dataset.assign)}/department`, {method: "PUT", json: {department: sel.value}});
+    toast(`${sel.dataset.assign} → ${sel.value}`); loadOrg();
+  }));
+  $("#deptGrid").innerHTML = o.departments.map(d => `
+    <div class="card pad dept"><h2><span>${esc(d.name)}</span><button class="btn sm" data-dedit="${d.id}">Edit</button></h2>
+      <div class="lbl">HOD</div>${d.hods.length ? d.hods.map(h => `<span class="chip ok">${esc(h.display_name)}</span>`).join(" ") : '<span class="pill warn">no HOD linked</span>'}
+      <div class="lbl">Roles</div><div class="chips">${d.roles.map(r => `<span class="chip">${esc(r)}</span>`).join("") || '<span class="sub">none yet</span>'}</div>
+      <div class="lbl">Vacancies (${d.vacancies.length})</div><div class="chips">${d.vacancies.map(v => `<span class="chip" title="${v.how === "role" ? "matched by role" : "assigned"}">${esc(v.code)} · ${esc(v.title)}</span>`).join("") || '<span class="sub">none right now</span>'}</div>
+    </div>`).join("") || `<div class="card empty" style="grid-column:1/-1">No departments yet. Press <b>Paste structure</b> to add many at once, or <b>+ Add department</b>.</div>`;
+  $$("[data-dedit]").forEach(b => b.onclick = () => openDept(o.departments.find(d => d.id === +b.dataset.dedit)));
+});
+function openDept(d) {
+  _editDept = d || null;
+  $("#deptModalH").textContent = d ? `Edit ${d.name}` : "Add department";
+  $("#dName").value = d ? d.name : ""; $("#dRoles").value = d ? d.roles.join(", ") : "";
+  const mine = new Set(d ? d.hods.map(h => h.id) : []);
+  $("#dHods").innerHTML = _orgHods.map(h => `<label><input type="checkbox" value="${h.id}" ${mine.has(h.id) ? "checked" : ""}>${esc(h.display_name)}<span class="sub">@${esc(h.username)}</span></label>`).join("")
+    || '<div class="sub" style="padding:8px">No HOD accounts yet. Create them in the Users tab, then come back.</div>';
+  $("#dDelete").style.display = d ? "" : "none";
+  $("#deptModal").classList.add("on");
+}
+$("#newDept").onclick = () => openDept(null);
+$("#dCancel").onclick = () => $("#deptModal").classList.remove("on");
+$("#dSave").onclick = guard(async () => {
+  const body = {name: $("#dName").value, roles: $("#dRoles").value, hods: $$("#dHods input:checked").map(i => +i.value)};
+  if (_editDept) await api("/api/departments/" + _editDept.id, {method: "PUT", json: body});
+  else await api("/api/departments", {method: "POST", json: body});
+  $("#deptModal").classList.remove("on"); toast("Department saved"); loadOrg();
+});
+$("#dDelete").onclick = guard(async () => {
+  if (!_editDept || !confirm(`Delete "${_editDept.name}"? Its HODs lose access to those vacancies until you assign another department.`)) return;
+  await api("/api/departments/" + _editDept.id, {method: "DELETE"});
+  $("#deptModal").classList.remove("on"); toast("Department deleted"); loadOrg();
+});
+$("#orgBulk").onclick = () => { $("#orgText").value = ""; $("#orgModal").classList.add("on"); };
+$("#oCancel").onclick = () => $("#orgModal").classList.remove("on");
+$("#oSave").onclick = guard(async () => {
+  const r = await api("/api/departments/import", {method: "POST", json: {text: $("#orgText").value}});
+  $("#orgModal").classList.remove("on"); toast(`${r.added} added, ${r.merged} updated`); loadOrg();
+});
+
+// close user modal on escape too
+document.addEventListener("keydown", e => { if (e.key === "Escape") ["#userModal", "#deptModal", "#orgModal", "#groupModal", "#titleModal", "#bulkModal"].forEach(m => $(m).classList.remove("on")); });
+
+
+/* ---------- start ---------- */
+(async () => { await authInit(); await refresh(); await loadJds(); const o = state.overview; if (o) { $("#fMin").value = o.threshold; $("#fMinOut").textContent = o.threshold + "%"; } loadCands(); })();
+</script>
+</body>
+</html>

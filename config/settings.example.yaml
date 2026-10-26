@@ -1,0 +1,104 @@
+# Copy to config/settings.yaml and edit. Anything you leave out falls back to
+# the defaults in sourcer/config.py, so a file with three lines is fine.
+
+location:
+  target_city: Karachi
+  target_country: Pakistan
+
+jd_dir: config/jds
+
+storage:
+  db_path: storage/sourcer.db
+  profiles_dir: storage/profiles      # the PDF library
+  pdf_inbox: storage/pdf_inbox        # drop profile PDFs here
+  exports_dir: storage/exports
+
+scoring:
+  # Weights are renormalised, so these are relative. Shift them to match what
+  # you actually hire on - if location is non-negotiable, raise it.
+  weights:
+    must_have_skills: 32
+    nice_have_skills: 8
+    experience_years: 15
+    title_relevance: 17
+    seniority_fit: 6
+    domain_industry: 5
+    education: 7
+    location: 10
+
+  # tiebreak | bonus | blend   (see sourcer/scoring.py for what each does)
+  semantic_mode: tiebreak
+  semantic_reference: 0.30
+  semantic_bonus_points: 6.0
+  semantic_blend: 0.20
+
+  # A profile missing anything in a JD's `hard_requirements`, or under a JD's
+  # min_years when it sets `hard_min_years: true`, cannot score above this.
+  hard_requirement_cap: 45
+
+  # What `sourcer query` uses when you do not pass --min-score.
+  default_shortlist_threshold: 75
+
+  # Relevant years below this fraction of the JD minimum score zero on the
+  # experience dimension.
+  experience_floor_ratio: 0.5
+
+  # Optional second opinion from Claude on the top N per vacancy. Costs money
+  # per run and needs ANTHROPIC_API_KEY. The rubric score is always kept
+  # alongside it, so you can see where the model disagreed.
+  llm_rerank:
+    enabled: false
+    model: claude-sonnet-5-5
+    top_n: 25
+    weight: 0.25
+
+retention:
+  # Candidate records are deleted this many days after you last saw them,
+  # unless they are shortlisted/contacted/hired. Set this to whatever your
+  # policy says and keep `sourcer purge` on the schedule.
+  delete_after_days: 365
+  lawful_basis: "legitimate interest - recruitment (documented)"
+
+sources:
+  # Intake routes the daily run uses, in order.
+  enabled: [pdf_inbox, csv]
+
+  csv:
+    watch_dir: storage/imports
+
+  # A licensed people-data vendor. Read sourcer/sources/provider.py before
+  # enabling - you need a contract, and the data has to be lawfully sourced
+  # for Pakistan. Add "proxycurl" to `enabled` once the key is set.
+  proxycurl:
+    api_key_env: PROXYCURL_API_KEY
+    page_size: 10
+    country_code: pk
+
+  # Official LinkedIn Talent Solutions. Needs an approved partner app; a normal
+  # LinkedIn account cannot use this. Add "linkedin_talent" to `enabled` once
+  # you have the contract and the endpoint your agreement grants.
+  linkedin_talent:
+    client_id_env: LI_CLIENT_ID
+    client_secret_env: LI_CLIENT_SECRET
+    # search_path: /talentSearch        # from your contract documentation
+    api_version: "202405"
+
+run:
+  max_new_per_day: 200      # cap per run, protects your vendor quota
+  rate_limit_sleep: 2.0     # seconds between vendor API calls
+
+# Direct LinkedIn sourcing (the LinkedIn tab). Most of these can also be changed
+# from the app; the app's changes are kept in settings.ui.yaml.
+linkedin:
+  daily_profile_cap: 40         # profile pages per day, at most
+  ramp_up: true                 # day 1 = 10, +5 per active day, up to the cap
+  window_start: "10:00"         # only browse inside this local-time window
+  window_end: "19:00"
+  weekdays_only: false
+  session_minutes_max: 25       # one sitting never lasts longer
+  min_delay: 25                 # seconds between profile views
+  max_delay: 85
+  location_filter: metro        # metro | country | any
+  deep_experience: true         # open the full experience list when truncated
+  cooldown_hours: 48            # pause after any LinkedIn warning
+  geo_urn: ""                   # paste from the app once you have filtered to your city

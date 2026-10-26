@@ -1,0 +1,15 @@
+# core - everything the bot needs to run
+pdfplumber>=0.11.0      # read profile/CV PDFs
+reportlab>=4.0.0        # write profile PDFs and cover sheets
+PyYAML>=6.0             # config and taxonomies
+pandas>=2.0.0           # CSV/Excel intake and exports
+openpyxl>=3.1.0         # .xlsx read/write
+requests>=2.31.0        # provider API adapters
+python-dateutil>=2.8.0  # date parsing fallbacks
+Flask>=3.0.0            # the local web app
+playwright>=1.45.0      # drives your Chrome for direct LinkedIn sourcing
+
+# optional
+# anthropic>=0.40.0              # Claude re-rank (scoring.llm_rerank.enabled)
+# sentence-transformers>=2.7.0   # better semantic matching; then SOURCER_EMBEDDINGS=st
+# pytest>=8.0.0                  # run the test suite

@@ -1,0 +1,49 @@
+Usman Shaikh
+· 2nd
+Senior Data Engineer at Systems Limited | Airflow | Spark | Snowflake
+Karachi, Sindh, Pakistan · Contact info
+500+ connections
+Message
+Connect
+More
+About
+Data engineer with eight years building batch and streaming pipelines for banking and telecom clients. Owner of the Airflow platform and the dimensional models behind group reporting.
+…see more
+Experience
+Systems Limited
+Systems Limited
+Full-time · 3 yrs 8 mos
+Senior Data Engineer
+Senior Data Engineer
+Feb 2022 - Present · 3 yrs 8 mos
+Karachi, Sindh, Pakistan · On-site
+Own the Airflow orchestration layer; rebuilt the warehouse on Snowflake with dbt; migrated 120 SSIS packages to PySpark on AWS Glue.
+Jazz
+Data Engineer
+Jazz · Full-time
+Jun 2019 - Jan 2022 · 2 yrs 8 mos
+Karachi, Pakistan
+Built Kafka ingestion and Hive models for CDR analytics; authored the churn feature store in Spark.
+ETL Developer
+Habib Bank Limited · Full-time
+Aug 2017 - May 2019 · 1 yr 10 mos
+Karachi, Pakistan
+SSIS and T-SQL development for the retail data warehouse.
+Show all 4 experiences
+Education
+NED University of Engineering and Technology
+Bachelor of Engineering - BE, Computer Systems Engineering
+2013 - 2017
+Skills
+Apache Airflow
+Used at Systems Limited
+12 endorsements
+PySpark
+Snowflake
+SQL
+Show all 21 skills
+Recommendations
+Received (2)
+People also viewed
+Some Other Person
+Marketing Manager

@@ -1,0 +1,10 @@
+.git
+.pytest_cache
+__pycache__
+*.pyc
+storage
+collector_data
+tests
+*.zip
+*.bat
+.env

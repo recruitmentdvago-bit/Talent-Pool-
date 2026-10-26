@@ -1,0 +1,18 @@
+# Personal data must never reach a git remote.
+storage/
+config/settings.yaml
+*.db
+*.db-wal
+*.db-shm
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.zip
+
+# deploy / local state
+collector_data/
+config/settings.ui.yaml
+.env
+data/
+*.log
