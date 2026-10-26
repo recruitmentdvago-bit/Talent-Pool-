@@ -173,7 +173,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <nav class="nav" id="tabs">
     <button data-t="cand" class="on"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Candidates</button>
     <button data-t="jds"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Vacancies</button>
-    <button data-t="org" id="tabOrg" style="display:none"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><path d="M12 8v4M5 16v-2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/></svg>Org structure</button>
+    <button data-t="org" id="tabOrg" style="display:none"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><path d="M12 8v4M5 16v-2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/></svg>Department Setup</button>
     <button data-t="co" id="tabCo" style="display:none"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M9 17h6"/></svg>Companies</button>
     <button data-t="tt" id="tabTt" style="display:none"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg>Search titles</button>
     <div class="sep" id="sepAdmin" style="display:none">Admin</div>
@@ -576,7 +576,7 @@ const guard = fn => async (...a) => { try { return await fn(...a); } catch (e) {
 const TAB_INFO = {
   cand: ["Candidates", "Ask in plain words, or filter by vacancy, score and city."],
   jds: ["Vacancies", "Each vacancy is scored against every candidate; editing one rescores everyone."],
-  org: ["Org structure", "Departments, their roles and their HODs. This decides who sees which vacancy."],
+  org: ["Department Setup", "Departments, their roles and their HODs. This decides who sees which vacancy."],
   li: ["LinkedIn", "Direct sourcing, pacing limits, scoring weights and AI settings."],
   imp: ["Import", "Add LinkedIn PDFs, CVs or spreadsheets you already have."],
   co: ["Preferred companies", "Manage the target-company lists once; every matching vacancy picks them up automatically."],
@@ -720,7 +720,7 @@ const loadJds = guard(async () => {
       ${(j.effective_employers||[]).length ? `<div class="sub" style="margin-top:8px"><b>Target companies:</b> ${esc(j.effective_employers.slice(0,5).join(", "))}${j.effective_employers.length > 5 ? ` +${j.effective_employers.length - 5}` : ""}</div>` : ""}
       ${(j.effective_titles||[]).length ? `<div class="sub" style="margin-top:3px"><b>Also searched as:</b> ${esc(j.effective_titles.slice(0,4).join(", "))}${j.effective_titles.length > 4 ? ` +${j.effective_titles.length - 4}` : ""}</div>` : ""}
       <div class="row" style="margin-top:14px"><button class="btn sm${admin ? "" : " primary"}" data-view="${esc(j.code)}">See candidates</button>${admin ? `${_curUser.cloud ? "" : `<button class="btn sm primary" data-source="${esc(j.code)}">Source</button>`}<button class="btn sm" data-edit="${esc(j.code)}">Edit</button><button class="btn sm danger" data-del="${esc(j.code)}">Archive</button>` : ""}</div>
-    </div>`).join("") || `<div class="card empty" style="grid-column:1/-1">${admin ? "No vacancies yet. Add your first one to start scoring candidates." : "No vacancies are assigned to you yet. Ask HR to link your department in Org structure."}</div>`;
+    </div>`).join("") || `<div class="card empty" style="grid-column:1/-1">${admin ? "No vacancies yet. Add your first one to start scoring candidates." : "No vacancies are assigned to you yet. Ask HR to link your department in Department Setup."}</div>`;
   srcBanner();
   $$("[data-view]").forEach(b => b.onclick = () => { $("#fRole").value = b.dataset.view; $("#fFound").value = ""; showTab("cand"); loadCands(); });
   $$("[data-edit]").forEach(b => b.onclick = () => openJd(state.jds.find(j => j.code === b.dataset.edit)));
@@ -780,7 +780,7 @@ const refreshEffective = () => { clearTimeout(_effT); _effT = setTimeout(guard(a
   if (!title) { el.style.display = "none"; return; }
   const r = await api("/api/jds/effective", {method: "POST", json: {title, department: $("#jDept").value, text: $("#jText").value, must_have: jv("jMust"), nice_have: jv("jNice")}});
   const bits = [];
-  bits.push(r.department ? `<b>Department:</b> ${esc(r.department)}${r.department_how === "role" ? " (matched by role)" : ""}` : `<b>Department:</b> none yet - add the role in Org structure`);
+  bits.push(r.department ? `<b>Department:</b> ${esc(r.department)}${r.department_how === "role" ? " (matched by role)" : ""}` : `<b>Department:</b> none yet - add the role in Department Setup`);
   bits.push(`<b>Target companies added automatically:</b> ${r.employers_from_rules.length ? esc(r.employers_from_rules.join(", ")) + (r.employer_groups.length ? ` <span class="sub">(${esc(r.employer_groups.join(", "))})</span>` : "") : "none - manage lists in the Companies tab"}`);
   const t = r.titles_from_rules.length ? r.titles_from_rules : r.suggested_titles;
   bits.push(`<b>Related titles the bot will also search:</b> ${t.length ? esc(t.join(", ")) + ' <span class="sub">(worked out from the JD when you save)</span>' : "none found - the bot searches the title and skills only"}`);
@@ -1009,7 +1009,7 @@ function openUserModal(u) {
   $("#uRole").value = u ? u.role : "hod";
   const mine = (u && u.departments) || [];
   $("#uDepts").innerHTML = (state.depts || []).map(d => `<label><input type="checkbox" value="${esc(d.name)}" ${mine.includes(d.name) ? "checked" : ""}>${esc(d.name)}<span class="sub">${d.roles.length} role${d.roles.length === 1 ? "" : "s"}</span></label>`).join("")
-    || '<div class="sub" style="padding:8px">No departments yet. Add them in Org structure first.</div>';
+    || '<div class="sub" style="padding:8px">No departments yet. Add them in Department Setup first.</div>';
   $("#uVacs").innerHTML = (state.jds || []).map(j => `<option value="${esc(j.code)}" ${u && (u.vacancies || []).includes(j.code) ? "selected" : ""}>${esc(j.code)} · ${esc(j.title)}</option>`).join("");
   $("#uRole").disabled = !!u && u.id === _curUser.id;            // you cannot demote yourself
   $("#uHodBox").style.display = $("#uRole").value === "hod" ? "" : "none";
@@ -1186,7 +1186,7 @@ function openGroup(g) {
   $("#gRoles").value = g ? g.roles.join(", ") : "";
   const mine = new Set(g ? g.departments : []);
   $("#gDepts").innerHTML = (state.deptNames || []).map(d => `<label><input type="checkbox" value="${esc(d)}" ${mine.has(d) ? "checked" : ""}>${esc(d)}</label>`).join("")
-    || '<div class="sub" style="padding:8px">No departments yet (Org structure tab). You can still scope by roles, or leave both empty for every vacancy.</div>';
+    || '<div class="sub" style="padding:8px">No departments yet (Department Setup tab). You can still scope by roles, or leave both empty for every vacancy.</div>';
   $("#gDelete").style.display = g ? "" : "none";
   $("#groupModal").classList.add("on");
 }

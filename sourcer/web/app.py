@@ -312,7 +312,8 @@ def create_app() -> Flask:
             return                                       # the host's health check (own hostname)
         host = (request.host or "").rsplit(":", 1)[0] if not request.host.startswith("[") \
             else request.host.split("]")[0] + "]"
-        if allowed_hosts is not None and host not in allowed_hosts:
+        if allowed_hosts is not None and host not in allowed_hosts \
+                and not (prod and host.endswith(".up.railway.app")):      # renaming the Railway domain must not lock you out
             abort(403)                                   # blocks DNS-rebinding
         if request.path.startswith("/api/ingest"):
             return                                       # token-protected, called by the collector, not a browser
@@ -1305,7 +1306,7 @@ def create_app() -> Flask:
     ]
     TEMPLATE_HELP = {
         "title": "Required. The designation, e.g. Data Analyst. Everything else is optional.",
-        "department": "Pick from the list. Leave empty and the portal matches it by role (Org structure tab).",
+        "department": "Pick from the list. Leave empty and the portal matches it by role (Department Setup tab).",
         "seniority": "intern / junior / mid / senior / lead / manager / director / executive. Empty = worked out from the title.",
         "min_years": "Minimum years of experience, e.g. 3.", "max_years": "Optional upper limit, e.g. 7.",
         "education_min": "intermediate / diploma / bachelors / masters.", "openings": "How many people you are hiring.",

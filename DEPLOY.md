@@ -72,7 +72,7 @@ If you forget `ADMIN_PASSWORD`, the first start prints a random one in the **Dep
 
 ## 4. First-time setup in the portal (about 15 minutes)
 
-1. **Org structure** → *Paste structure*: `Technology: Data Analyst, Data Engineer` (one department per line).
+1. **Department Setup** → *Paste structure*: `Technology: Data Analyst, Data Engineer` (one department per line).
 2. **Users** → add a login for each HOD and tick their departments.
 3. **Companies** → add your target-company lists; **Vacancies** → *Download Excel template*, fill it, *Bulk add*.
 4. **Agent activity** → *Agent settings* → Provider **Groq** → Save → **Test connection**. It must say *Working*. Then **Import** a few PDFs and watch the log: Extracting → Parsing → Saving → Scoring → AI agent.

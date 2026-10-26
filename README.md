@@ -97,9 +97,9 @@ The **Log in to LinkedIn** button opens a normal Chrome or Edge window (Chrome i
 
 The app asks for a login. The first time it starts it creates **admin / admin123**; a yellow banner reminds you to change that password (Users tab, Edit on the admin row) until you do.
 
-1. **Org structure** tab: add each department and the roles that belong to it (or press *Paste structure* and paste lines like `Technology: Data Analyst, Data Engineer`).
+1. **Department Setup** tab: add each department and the roles that belong to it (or press *Paste structure* and paste lines like `Technology: Data Analyst, Data Engineer`).
 2. **Users** tab: create one login per HOD, then tick the departments they head. (You can also pick HODs from the department's own *Edit* window - both write the same link.)
-3. Every vacancy goes to a department by itself when its title matches one of that department's roles ("Senior Data Analyst" matches the role "Data Analyst"). To override, open the vacancy and choose a department, or use the *assign to...* box on the Org structure page for vacancies that match nothing.
+3. Every vacancy goes to a department by itself when its title matches one of that department's roles ("Senior Data Analyst" matches the role "Data Analyst"). To override, open the vacancy and choose a department, or use the *assign to...* box on the Department Setup page for vacancies that match nothing.
 
 A HOD sees only Candidates and Vacancies, only for their departments' vacancies. They can move a candidate through the stages, download PDFs and export - but cannot see other departments' candidates, the LinkedIn / Import / Users / Org tabs, or any setting.
 
