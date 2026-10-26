@@ -45,6 +45,9 @@ def _employer_rank(card: dict, preferred: list[str]) -> int:
     return 1
 
 
+WIDER = "wider search: "
+
+
 def search_keywords(jd: JD, companies: list[str] | None = None) -> str:
     """Boolean keywords for one vacancy: any of the target titles (including
     extra_titles the user added), plus the top N must-have skills where N is
@@ -58,7 +61,7 @@ def search_keywords(jd: JD, companies: list[str] | None = None) -> str:
         if t and t.lower() not in {x.lower() for x in titles} and len(titles) < 8:
             titles.append(t)
     q = "(" + " OR ".join(f'"{t}"' for t in titles) + ")"
-    n_skills = max(0, min(2, int(getattr(jd, "search_skills_count", 2) or 2)))
+    n_skills = max(0, min(2, int(2 if getattr(jd, "search_skills_count", 2) is None else getattr(jd, "search_skills_count", 2))))
     skills = [s.replace("_", " ") for s in jd.must_have[:n_skills]]
     for s in skills:
         q += f' AND "{s}"' if " " in s else f" AND {s}"
@@ -74,16 +77,26 @@ def search_stages(jd: JD, mode: str = "priority_first", chunk: int = 5, max_chun
     only: preferred companies and nothing else.   ignore: everyone, whatever the lists say.
     With no preferred companies there is just the one general search."""
     general = ("everyone on LinkedIn", search_keywords(jd))
+    # If the full search finds nothing at all (too many titles and skills ANDed together), wider ones
+    # follow - and are used ONLY in that case, never after a search that did return people.
+    import dataclasses
+    wider: list[tuple[str, str]] = []
+    titles_only = search_keywords(dataclasses.replace(jd, search_skills_count=0))
+    if titles_only != general[1]:
+        wider.append((WIDER + "job titles only", titles_only))
+    exact = f'"{jd.title}"'
+    if exact not in (general[1], titles_only):
+        wider.append((WIDER + "exact title only", exact))
     comps: list[str] = []
     for c in jd.preferred_employers or []:
         if c and c.lower() not in {x.lower() for x in comps}:
             comps.append(c)
     if not comps or mode == "ignore":
-        return [general]
+        return [general, *wider]
     chunks = [comps[i:i + chunk] for i in range(0, len(comps), chunk)][:max_chunks]
     stages = [(f"preferred companies ({', '.join(ch)})", search_keywords(jd, ch)) for ch in chunks]
     if mode != "only":
-        stages.append(general)
+        stages += [general, *wider]
     return stages
 
 
@@ -206,13 +219,18 @@ class LinkedInBrowserSource(BaseSource):
 
                 searched_this_run = False
 
-                def widen_or_finish(jd: JD, why: str) -> None:
-                    """This search is used up: go on to the next one (everyone), or finish."""
+                def widen_or_finish(jd: JD, why: str, empty_first: bool = False) -> None:
+                    """This search is used up: go on to the next one (everyone), or finish.
+                    The "wider search" stages are for a search that found NOBODY on its first page."""
                     code = jd.code
-                    if stage_i[code] + 1 < len(stages[code]):
-                        stage_i[code] += 1
+                    nxt = stage_i[code] + 1
+                    while not empty_first and nxt < len(stages[code]) and stages[code][nxt][0].startswith(WIDER):
+                        nxt += 1
+                    if nxt < len(stages[code]):
+                        stage_i[code] = nxt
                         next_page[code] = 1
                         log(f"[{code}] {why} - now searching {stages[code][stage_i[code]][0]}")
+                        events.emit("extract", f"{why} - trying: {stages[code][stage_i[code]][0]}", vacancy=code, level="warn")
                         remember(code, 1)
                     else:
                         exhausted.add(code)
@@ -250,7 +268,15 @@ class LinkedInBrowserSource(BaseSource):
                         with db.session() as c4:
                             bump(c4, "search")
                         if not cards:
-                            widen_or_finish(jd, "no more results")
+                            first_page_empty = next_page[code] == 2
+                            if first_page_empty:                    # keep what LinkedIn actually showed, to find out why
+                                try:
+                                    br.dump_debug(f"search_{code}", br.page.inner_text("body")[:6000],
+                                                  f"no people found for: {kw}")
+                                except Exception:
+                                    pass
+                            widen_or_finish(jd, "LinkedIn found nobody for this search" if first_page_empty
+                                            else "no more results", empty_first=first_page_empty)
                             continue
                         kept = skipped_loc = skipped_seen = 0
                         filtered: list[dict] = []

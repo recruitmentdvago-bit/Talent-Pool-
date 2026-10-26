@@ -157,7 +157,7 @@ def _jd_dict(r) -> dict:
             "hard_requirements": jload(r["hard_requirements"]),
             "preferred_employers": jload(r["preferred_employers"]),
             "extra_titles": jload(r["extra_titles"]),
-            "search_skills_count": int(r["search_skills_count"] or 2),
+            "search_skills_count": int(2 if r["search_skills_count"] is None else r["search_skills_count"]),
             "priority": int(r["priority"] or 0),
             "version": r["version"],
             "raw_text": r["raw_text"] or ""}
@@ -591,7 +591,7 @@ def create_app() -> Flask:
         from ..models import JD as JDModel
         jd = JDModel(title=title, must_have=_as_list(d.get("must_have")),
                      extra_titles=_as_list(d.get("extra_titles")),
-                     search_skills_count=int(d.get("search_skills_count", 2) or 2))
+                     search_skills_count=int(2 if d.get("search_skills_count") in (None, "") else d["search_skills_count"]))
         from ..normalize import titles_index
         jd.title_family = titles_index().family_of(title)
         return jsonify({"query": search_keywords(jd), "family": jd.title_family})

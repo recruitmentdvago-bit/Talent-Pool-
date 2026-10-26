@@ -430,7 +430,7 @@ def load_all(conn, active_only: bool = True, effective: bool = True) -> list[tup
             nice_have=jload(r["nice_have"]), hard_requirements=jload(r["hard_requirements"]),
             preferred_employers=eff["employers"] if eff else jload(r["preferred_employers"]),
             extra_titles=eff["titles"] if eff else jload(r["extra_titles"]),
-            search_skills_count=int(r["search_skills_count"] or 2),
+            search_skills_count=int(2 if r["search_skills_count"] is None else r["search_skills_count"]),
             priority=int(r["priority"] or 0),
             department=(eff["department"] if eff else "") or r["department"] or "",
             raw_text=r["raw_text"] or "", source_file=r["source_file"] or "",
