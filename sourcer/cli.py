@@ -278,7 +278,13 @@ def cmd_collect(args) -> int:
     if not url or not token:
         _p("need --url and --token (or PORTAL_URL and INGEST_TOKEN in the environment)")
         return 2
-    return collect(url, token, limit=args.limit, push_only=args.push_only, log=_p, now=args.now)
+    return collect(url, token, limit=args.limit, push_only=args.push_only, log=_p, now=args.now, folder=args.folder)
+
+
+def cmd_export_folders(args) -> int:
+    from . import profile_folders
+    profile_folders.export(args.folder, log=_p)
+    return 0
 
 
 def cmd_rescore(args) -> int:
@@ -356,7 +362,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--limit", type=int, help="open at most this many profiles")
     p.add_argument("--push-only", action="store_true", help="skip sourcing, just send what is already here")
     p.add_argument("--now", action="store_true", help="ignore the working hours set in the portal")
+    p.add_argument("--folder", help="where to keep the per-vacancy profile folders (default: 'Candidate Profiles' next to the program)")
     p.set_defaults(f=cmd_collect)
+
+    p = sub.add_parser("export-folders", help="copy every profile PDF into a 'Candidate Profiles' folder, one subfolder per vacancy")
+    p.add_argument("--folder", help="target folder (default: 'Candidate Profiles' next to the program)")
+    p.set_defaults(f=cmd_export_folders)
 
     p = sub.add_parser("purge", help="delete records past their retention date")
     p.add_argument("--yes", action="store_true")

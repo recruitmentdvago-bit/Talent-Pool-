@@ -101,7 +101,7 @@ def push_candidates(url: str, token: str, since_id: int | None = None, batch: in
 
 
 def collect(url: str, token: str, limit: int | None = None, push_only: bool = False, log=print,
-            now: bool = False) -> int:
+            now: bool = False, folder: str | None = None) -> int:
     """`now=True` ignores the portal's working hours (for a test, or when you really mean it)."""
     if not push_only:
         pull_vacancies(url, token, log)
@@ -110,6 +110,11 @@ def collect(url: str, token: str, limit: int | None = None, push_only: bool = Fa
             log("Outside the working hours set in the portal - nothing was opened. Run again with --now to ignore them.")
         for line in s.as_text().splitlines():
             log(line)
+    try:                                              # a tidy per-vacancy copy on this PC, before the upload
+        from . import profile_folders
+        profile_folders.export(folder, log=log)
+    except Exception as e:
+        log(f"could not update the Candidate Profiles folder: {type(e).__name__}: {e}")
     tot = push_candidates(url, token, log=log)
     log(f"done: {tot['created']} new, {tot['updated']} updated, {tot['failed']} failed on the portal")
     return 0

@@ -92,7 +92,22 @@ set SOURCER_DATA_DIR=collector_data
 set INGEST_TOKEN=<the same value you put on Railway>
 python -m sourcer collect --url https://<name>.up.railway.app
 ```
-It pulls the portal's open vacancies, sources LinkedIn with the usual slow pacing, and sends every profile with its PDF. The portal scores them and the agent starts by itself. PC off = no sourcing (see README → "mere pc band hoga").
+It pulls the portal's open vacancies and pacing settings, sources LinkedIn with the usual slow pacing, and sends every profile with its PDF. The portal scores them and the agent starts by itself. PC off = no sourcing (see README → "mere pc band hoga").
+
+
+### The "Candidate Profiles" folder on your PC
+
+After every collector run (and before uploading), the collector files a copy of every profile PDF it has read into a folder next to the program, one subfolder per vacancy:
+
+```
+Candidate Profiles\
+    Data Analyst\              <- everyone found while searching for that vacancy
+    Digital Marketing Manager\
+    Pharmacist\
+    _index.csv                 <- name, vacancy, score, role, company, city, LinkedIn link, file
+```
+
+It only adds what is new, so running it again is harmless. To keep it somewhere else add `--folder "D:\Hiring\Candidate Profiles"` to the collect command, or set `CANDIDATE_PROFILES_FOLDER`. To refresh it without sourcing: `python -m sourcer export-folders`. The folder is excluded from git: it holds personal data.
 
 ## 6. Updating, backups, costs
 

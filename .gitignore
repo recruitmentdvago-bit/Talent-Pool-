@@ -16,4 +16,6 @@ config/settings.ui.yaml
 .env
 /data/
 *.log
-collector_run.bat
+
+# personal data exported for people - never commit
+Candidate Profiles/
