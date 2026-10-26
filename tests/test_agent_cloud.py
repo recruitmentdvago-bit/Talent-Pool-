@@ -404,3 +404,64 @@ def test_backup_zip_has_a_working_database_and_the_vacancies(cloud):
     c.post("/api/users", json={"username": "some.hod", "password": "secret1", "role": "hod"}, headers=h)
     hod_app.post("/api/login", json={"username": "some.hod", "password": "secret1"}, headers=h)
     assert hod_app.get("/api/backup", headers=h).status_code == 403
+
+
+# ---- stale model names ------------------------------------------------------------ #
+def _err(status, code, message):
+    return FakeResp(status, {"error": {"code": code, "message": message, "type": "invalid_request_error"}})
+
+
+def _models_resp(ids):
+    return FakeResp(200, {"data": [{"id": i, "active": True} for i in ids]})
+
+
+def test_a_retired_model_is_replaced_by_one_that_exists_today(pool, sandbox, monkeypatch):
+    app, client = pool
+    _use_agent(sandbox)
+    agent._override.clear()
+    import requests
+    seen = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        seen.append(json["model"])
+        if json["model"] == "llama-3.3-70b-versatile":
+            return _err(404, "model_not_found", "The model `llama-3.3-70b-versatile` does not exist or you do not have access to it.")
+        return _groq_ok(79)
+    monkeypatch.setattr(requests, "post", fake_post)
+    monkeypatch.setattr(requests, "get", lambda *a, **k: _models_resp(
+        ["whisper-large-v3", "llama-guard-4-12b", "openai/gpt-oss-20b", "llama-3.1-8b-instant", "meta-llama/llama-4-scout-17b-16e-instruct"]))
+    r = client.post("/api/agent/test", json={}, headers=H)
+    assert r.status_code == 200 and r.get_json()["score"] == 79
+    assert seen[0] == "llama-3.3-70b-versatile" and seen[1] == "meta-llama/llama-4-scout-17b-16e-instruct"   # best live chat model; no whisper / guard
+    assert r.get_json()["model"] == "meta-llama/llama-4-scout-17b-16e-instruct"
+    assert client.get("/api/settings").get_json()["agent"]["model"] == "meta-llama/llama-4-scout-17b-16e-instruct"   # remembered
+    events.flush()
+    ev = client.get("/api/events?limit=100").get_json()["events"]
+    assert any("Switching to" in e["message"] for e in ev)
+    agent._override.clear()
+
+
+def test_model_list_endpoint_and_a_real_explanation_when_nothing_works(pool, sandbox, monkeypatch):
+    app, client = pool
+    _use_agent(sandbox)
+    agent._override.clear()
+    import requests
+    monkeypatch.setattr(requests, "get", lambda *a, **k: _models_resp(["whisper-large-v3", "llama-3.1-8b-instant", "openai/gpt-oss-120b"]))
+    m = client.get("/api/agent/models").get_json()
+    assert m["models"] == ["openai/gpt-oss-120b", "llama-3.1-8b-instant"]
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _err(400, "model_decommissioned", "The model has been decommissioned."))
+    bad = client.post("/api/agent/test", json={}, headers=H)
+    assert bad.status_code == 400
+    msg = bad.get_json()["error"]
+    assert "decommissioned" in msg and "gpt-oss-120b" in msg                      # Groq's own words + what to use instead
+    agent._override.clear()
+
+
+def test_a_403_that_is_not_about_the_model_is_reported_as_a_key_problem(pool, sandbox, monkeypatch):
+    app, client = pool
+    _use_agent(sandbox)
+    agent._override.clear()
+    import requests
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _err(401, "invalid_api_key", "Invalid API Key"))
+    r = client.post("/api/agent/test", json={}, headers=H)
+    assert r.status_code == 400 and "refused the key" in r.get_json()["error"] and "Invalid API Key" in r.get_json()["error"]

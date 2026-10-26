@@ -14,5 +14,5 @@ __pycache__/
 collector_data/
 config/settings.ui.yaml
 .env
-data/
+/data/
 *.log

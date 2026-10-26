@@ -366,13 +366,13 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       <h2>Agent settings</h2>
       <div class="form" style="margin-top:8px">
         <label class="f c3">Provider<select id="agProv"></select></label>
-        <label class="f c3">Model <span style="font-weight:400">(empty = default)</span><input type="text" id="agModel" placeholder="" autocomplete="off"></label>
+        <label class="f c3">Model <span style="font-weight:400">(empty = automatic)</span><input type="text" id="agModel" placeholder="" autocomplete="off" list="agModels"><datalist id="agModels"></datalist></label>
         <label class="f c2">Profiles per vacancy<input type="number" id="agTop" min="1" max="100"></label>
         <label class="f c2">Only if rubric ≥<input type="number" id="agMin" min="0" max="100"></label>
         <label class="f c2">Agent's share of score<input type="number" id="agW" min="0" max="0.5" step="0.05"></label>
         <div class="c6 steps" id="agKeys"></div>
       </div>
-      <div class="row" style="margin-top:12px"><button class="btn primary sm" id="agSave">Save</button><span class="hint" id="agSaved"></span></div>
+      <div class="row" style="margin-top:12px"><button class="btn primary sm" id="agSave">Save</button><button class="btn sm" id="agModels2" title="Ask the provider which models your key can use right now">Check available models</button><span class="hint" id="agSaved"></span></div>
     </div>
   </div>
 </section>
@@ -1084,6 +1084,11 @@ $("#agProv").onchange = () => { const p = AG.provs.find(x => x.id === $("#agProv
 $("#agSave").onclick = guard(async () => {
   await api("/api/settings", {method: "POST", json: {agent: {provider: $("#agProv").value, model: $("#agModel").value, top_n: +$("#agTop").value, min_rubric: +$("#agMin").value, weight: +$("#agW").value}}});
   toast("Agent settings saved"); $("#agSaved").textContent = ""; agLoadSettings(); agPoll(false);
+});
+$("#agModels2").onclick = guard(async () => {
+  const r = await api("/api/agent/models");
+  $("#agModels").innerHTML = r.models.map(m => `<option value="${esc(m)}">`).join("");
+  $("#agSaved").textContent = r.models.length ? `${r.models.length} models available now. Best: ${r.models[0]} - leave Model empty to let the agent pick, or choose one.` : (r.note || "None found.");
 });
 $("#agRun").onclick = guard(async () => { await api("/api/run", {method: "POST", json: {kind: "agent"}}); toast("Agent started - watch the log below"); agPoll(false); });
 $("#agRunAll").onclick = guard(async () => { await api("/api/run", {method: "POST", json: {kind: "agent", force: true}}); toast("The agent is re-reading everyone"); agPoll(false); });

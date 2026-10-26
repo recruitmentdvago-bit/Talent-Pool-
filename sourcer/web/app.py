@@ -1699,6 +1699,15 @@ def create_app() -> Flask:
             conn.execute("DELETE FROM events")
         return jsonify({"ok": True})
 
+    @app.get("/api/agent/models")
+    def agent_models():
+        _admin_only()
+        if agent.provider() != "groq":
+            return jsonify({"models": [], "note": "Live model lists are available for Groq."})
+        ms = agent.groq_models()
+        return jsonify({"models": ms, "current": agent.model(),
+                        "note": "" if ms else "Could not fetch the list - check GROQ_API_KEY."})
+
     @app.post("/api/agent/test")
     def agent_test():
         _admin_only()

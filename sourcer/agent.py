@@ -37,9 +37,10 @@ REPLY_FORMAT = """Reply with ONE JSON object and nothing else:
 
 
 class AgentError(Exception):
-    def __init__(self, msg: str, fatal: bool = False):
+    def __init__(self, msg: str, fatal: bool = False, model_problem: bool = False):
         super().__init__(msg)
-        self.fatal = fatal          # True = every further call this run would fail the same way
+        self.fatal = fatal                  # True = every further call this run would fail the same way
+        self.model_problem = model_problem  # the model name is unknown / retired / not allowed for this key
 
 
 def settings() -> dict:
@@ -56,7 +57,7 @@ def provider() -> str:
 
 
 def model() -> str:
-    return settings().get("model") or PROVIDERS.get(provider(), {}).get("model", "")
+    return _override.get(provider()) or settings().get("model") or PROVIDERS.get(provider(), {}).get("model", "")
 
 
 def has_key(p: str | None = None) -> bool:
@@ -76,6 +77,56 @@ def available() -> tuple[bool, str]:
         except ImportError:
             return False, "the 'anthropic' package is not installed (pip install anthropic)"
     return True, "ready"
+
+
+# --------------------------------------------------------------------------- #
+# Models change names. Ask Groq what is available now instead of trusting a name.
+# --------------------------------------------------------------------------- #
+_NOT_CHAT = ("whisper", "tts", "guard", "embed", "moderation", "transcri", "orpheus", "playai", "distil-whisper")
+_PREFER = ("llama-3.3-70b", "llama-3.1-70b", "gpt-oss-120b", "llama-4", "qwen", "llama-3.1-8b", "gpt-oss-20b", "gemma", "llama")
+
+
+def _rank(mid: str) -> int:
+    m = mid.lower()
+    for i, p in enumerate(_PREFER):
+        if p in m:
+            return i
+    return len(_PREFER)
+
+
+def groq_models() -> list[str]:
+    """Chat models this key can use right now, best first. [] if the list cannot be fetched."""
+    import requests
+    if not has_key("groq"):
+        return []
+    try:
+        r = requests.get("https://api.groq.com/openai/v1/models", timeout=20,
+                         headers={"Authorization": f"Bearer {os.environ['GROQ_API_KEY'].strip()}"})
+        if r.status_code != 200:
+            return []
+        ids = [m.get("id", "") for m in (r.json().get("data") or []) if m.get("active", True)]
+    except Exception:
+        return []
+    ids = [i for i in ids if i and not any(x in i.lower() for x in _NOT_CHAT)]
+    return sorted(ids, key=lambda i: (_rank(i), i))
+
+
+_override: dict[str, str] = {}      # a model we had to switch to during this run
+
+
+def _switch_model(bad: str, why: str, label: str) -> str | None:
+    """The configured model was refused: pick the best live one, tell the log, and remember it."""
+    alt = next((m for m in groq_models() if m != bad), None)
+    if not alt:
+        return None
+    events.emit("agent", f"Groq says model '{bad}' is not usable ({why[:120]}). Switching to '{alt}'.",
+                candidate=label, level="warn")
+    _override["groq"] = alt
+    try:
+        cfg().save_ui({"scoring": {"agent": {"model": alt}}})        # so the settings page shows what is really used
+    except Exception:
+        pass
+    return alt
 
 
 def blend(rubric: float, agent_score: float) -> float:
@@ -109,6 +160,14 @@ def _parse(text: str, cid: int) -> Assessment:
                       reasons=clean(d.get("reasons")), concerns=clean(d.get("concerns")))
 
 
+def _groq_error(r) -> tuple[str, str]:
+    try:
+        e = (r.json() or {}).get("error") or {}
+        return str(e.get("code") or e.get("type") or ""), str(e.get("message") or "")
+    except Exception:
+        return "", (getattr(r, "text", "") or "")[:200]
+
+
 def _groq(system: str, user: str, mdl: str, cid_label: str) -> tuple[str, dict]:
     import requests
     spec = PROVIDERS["groq"]
@@ -136,16 +195,17 @@ def _groq(system: str, user: str, mdl: str, cid_label: str) -> tuple[str, dict]:
             events.emit("agent", f"Groq rate limit reached - waiting {wait:.0f}s then trying again", candidate=cid_label, level="warn")
             time.sleep(wait)
             continue
-        if r.status_code in (401, 403):
-            raise AgentError("Groq refused the key - check GROQ_API_KEY", fatal=True)
-        if r.status_code == 404 or (r.status_code == 400 and "model" in r.text.lower()):
-            raise AgentError(f"Groq does not know the model '{mdl}' - pick another in the AI agent card", fatal=True)
+        if r.status_code >= 400 and r.status_code != 429 and r.status_code < 500:
+            code, msg = _groq_error(r)
+            if r.status_code in (400, 403, 404) and "model" in (code + " " + msg).lower():
+                raise AgentError(f"Groq cannot use the model '{mdl}': {msg or code}", fatal=True, model_problem=True)
+            if r.status_code == 401 or "api_key" in code.lower() or "api key" in msg.lower():
+                raise AgentError(f"Groq refused the key ({msg or code}) - check GROQ_API_KEY", fatal=True)
+            raise AgentError(f"Groq error {r.status_code}: {(msg or code or r.text)[:200]}", fatal=r.status_code == 403)
         if r.status_code >= 500:
             last = f"Groq server error {r.status_code}"
             time.sleep(3 * (attempt + 1))
             continue
-        if r.status_code >= 400:
-            raise AgentError(f"Groq error {r.status_code}: {r.text[:200]}")
         data = r.json()
         try:
             return data["choices"][0]["message"]["content"], data.get("usage") or {}
@@ -177,7 +237,19 @@ def assess(jd: JD, cid: int, cand: Candidate, label: str = "") -> tuple[Assessme
         raise AgentError(why, fatal=True)
     p, mdl = provider(), model()
     user = "\n\n".join(["JOB DESCRIPTION", _jd_block(jd), "", "CANDIDATE", _candidate_block(cid, cand), "", REPLY_FORMAT])
-    text, usage = _groq(SYSTEM, user, mdl, label) if p == "groq" else _claude(SYSTEM, user, mdl)
+    if p != "groq":
+        text, usage = _claude(SYSTEM, user, mdl)
+        return _parse(text, cid), usage
+    try:
+        text, usage = _groq(SYSTEM, user, mdl, label)
+    except AgentError as e:
+        if not e.model_problem:
+            raise
+        alt = _switch_model(mdl, str(e), label)           # the name is stale: use one that exists today
+        if not alt:
+            now_ok = ", ".join(groq_models()[:8])
+            raise AgentError(f"{e} Models available to your key now: {now_ok or 'could not fetch the list'}.", fatal=True)
+        text, usage = _groq(SYSTEM, user, alt, label)
     return _parse(text, cid), usage
 
 
