@@ -105,6 +105,7 @@ DEFAULTS: dict[str, Any] = {
         "deep_experience": True,            # open the full experience list when truncated
         "max_pages_per_search": 4,
         "profiles_per_vacancy": 10,         # open this many profiles for one vacancy, then rotate
+        "max_search_titles": 4,             # job titles ORed in one LinkedIn search (long ones return nothing)
         "profiles_per_run": 0,              # stop one run after this many profiles (0 = only the daily/time limits)
         "max_rounds": 0,                    # stop after this many passes over all vacancies (0 = no limit)
         "company_mode": "priority_first",   # priority_first | only | ignore  (see Companies tab)

@@ -151,6 +151,8 @@ class LinkedInBrowser:
         kw = _launch_kwargs(self.c)
         if exe:
             kw["executable_path"] = exe
+            if brand in ("chrome", "edge") and sys.platform == "win32":
+                kw["chromium_sandbox"] = True        # a normal Chrome/Edge: no "--no-sandbox" warning bar
         channel = (self.c.get("browser_channel") or "").strip()
         try:
             if channel and "executable_path" not in kw:

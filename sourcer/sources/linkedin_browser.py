@@ -48,22 +48,28 @@ def _employer_rank(card: dict, preferred: list[str]) -> int:
 WIDER = "wider search: "
 
 
-def search_keywords(jd: JD, companies: list[str] | None = None) -> str:
-    """Boolean keywords for one vacancy: any of the target titles (including
-    extra_titles the user added), plus the top N must-have skills where N is
-    controlled by jd.search_skills_count (default 2, 0 means title-only)."""
+TITLE_CHARS = 110        # LinkedIn's free search returns nothing for very long boolean queries
+
+
+def search_keywords(jd: JD, companies: list[str] | None = None, skills: int | None = None) -> str:
+    """Boolean keywords for one vacancy: any of the target titles (including the titles you manage),
+    plus the top N must-have skills where N is jd.search_skills_count (default 2, 0 = title only).
+    Kept short on purpose: a long OR list ANDed with skills makes LinkedIn answer "No results found"."""
     from ..searchplan import build
     plan = build(jd)
-    # the vacancy's own title first, then the titles you manage (Search titles tab),
-    # then the taxonomy's related titles to fill up to 8
+    max_titles = max(1, int(cfg().get("linkedin.max_search_titles", 4) or 4))
+    # the vacancy's own title first, then the titles you manage (Search titles tab), then the taxonomy's
     titles: list[str] = []
     for t in [jd.title, *(jd.extra_titles or []), *plan.titles]:
-        if t and t.lower() not in {x.lower() for x in titles} and len(titles) < 8:
-            titles.append(t)
+        if not t or t.lower() in {x.lower() for x in titles} or len(titles) >= max_titles:
+            continue
+        if titles and len(" OR ".join(f'"{x}"' for x in [*titles, t])) > TITLE_CHARS:
+            continue                                      # keep the title group short; try the next one
+        titles.append(t)
     q = "(" + " OR ".join(f'"{t}"' for t in titles) + ")"
-    n_skills = max(0, min(2, int(2 if getattr(jd, "search_skills_count", 2) is None else getattr(jd, "search_skills_count", 2))))
-    skills = [s.replace("_", " ") for s in jd.must_have[:n_skills]]
-    for s in skills:
+    n_skills = skills if skills is not None else int(2 if getattr(jd, "search_skills_count", 2) is None else getattr(jd, "search_skills_count", 2))
+    n_skills = max(0, min(2, n_skills))
+    for s in [s.replace("_", " ") for s in jd.must_have[:n_skills]]:
         q += f' AND "{s}"' if " " in s else f" AND {s}"
     if companies:
         q += " AND (" + " OR ".join('"' + c.replace('"', "") + '"' for c in companies) + ")"
@@ -79,14 +85,17 @@ def search_stages(jd: JD, mode: str = "priority_first", chunk: int = 5, max_chun
     general = ("everyone on LinkedIn", search_keywords(jd))
     # If the full search finds nothing at all (too many titles and skills ANDed together), wider ones
     # follow - and are used ONLY in that case, never after a search that did return people.
-    import dataclasses
     wider: list[tuple[str, str]] = []
-    titles_only = search_keywords(dataclasses.replace(jd, search_skills_count=0))
-    if titles_only != general[1]:
-        wider.append((WIDER + "job titles only", titles_only))
-    exact = f'"{jd.title}"'
-    if exact not in (general[1], titles_only):
-        wider.append((WIDER + "exact title only", exact))
+    seen = {general[1]}
+    candidates = [(WIDER + "job titles only", search_keywords(jd, skills=0))]
+    if jd.must_have:
+        first = jd.must_have[0].replace("_", " ")
+        candidates.append((WIDER + "main title + 1 skill", f'"{jd.title}" AND ' + (f'"{first}"' if " " in first else first)))
+    candidates.append((WIDER + "exact title only", f'"{jd.title}"'))
+    for label, kw in candidates:
+        if kw not in seen:
+            seen.add(kw)
+            wider.append((label, kw))
     comps: list[str] = []
     for c in jd.preferred_employers or []:
         if c and c.lower() not in {x.lower() for x in comps}:
@@ -218,6 +227,7 @@ class LinkedInBrowserSource(BaseSource):
                     return res
 
                 searched_this_run = False
+                opened_for: dict[str, int] = {}
 
                 def widen_or_finish(jd: JD, why: str, empty_first: bool = False) -> None:
                     """This search is used up: go on to the next one (everyone), or finish.
@@ -325,6 +335,7 @@ class LinkedInBrowserSource(BaseSource):
                         bump(c5, "profile")
                     remember(jd.code)
                     done += 1
+                    opened_for[jd.code] = opened_for.get(jd.code, 0) + 1
 
                     events.emit("extract", f"Read the page - {len(text):,} characters of profile text",
                                 candidate=card["name"], vacancy=jd.code)
@@ -421,5 +432,11 @@ class LinkedInBrowserSource(BaseSource):
             events.emit("error", f"LinkedIn sourcing stopped: {type(e).__name__}: {e}", level="error")
             res.errors.append(f"linkedin_browser: {type(e).__name__}: {e}")
 
+        for code in sorted(exhausted):
+            if not opened_for.get(code):
+                msg = (f"[{code}] none of its LinkedIn searches found anyone to open. Try the same words in LinkedIn's own "
+                       f"search box; loosen the vacancy's must-have skills or set 'Skills in search' to 0 (title only).")
+                res.notes.append(msg)
+                events.emit("error", msg, vacancy=code, level="warn")
         res.notes.append(f"linkedin_browser: opened {done} profile(s), kept {len(res.candidates)}")
         return res
