@@ -39,6 +39,7 @@ class Row:
     phone: str = ""
     status: str = "new"
     last_seen: str = ""
+    found_for: str = ""            # the vacancy code the bot was searching for when it found this person
 
     def as_dict(self) -> dict:
         d = self.__dict__.copy()
@@ -77,7 +78,7 @@ def resolve_jds(conn: sqlite3.Connection, role: str | None) -> list[sqlite3.Row]
 def query(conn: sqlite3.Connection, role: str | None = None, min_score: float | None = None,
           limit: int = 50, status: str | None = None, city: str | None = None,
           max_score: float | None = None, include_contacted: bool = True,
-          only_codes: set[str] | None = None) -> list[Row]:
+          only_codes: set[str] | None = None, found_for: str | None = None) -> list[Row]:
     """Best match per candidate across the vacancies that `role` resolves to."""
     jds = resolve_jds(conn, role)
     if only_codes is not None:                       # a HOD: best match among *their* vacancies only
@@ -93,7 +94,7 @@ def query(conn: sqlite3.Connection, role: str | None = None, min_score: float | 
     sql = f"""
         SELECT s.*, c.full_name, c.current_title, c.current_company, c.location_city,
                c.total_years, c.profile_pdf_path, c.linkedin_url, c.email, c.phone,
-               c.status, c.last_seen_at
+               c.status, c.last_seen_at, c.raw_json
         FROM scores s
         JOIN candidates c ON c.id = s.candidate_id
         JOIN jds j ON j.id = s.jd_id AND j.version = s.jd_version
@@ -116,6 +117,9 @@ def query(conn: sqlite3.Connection, role: str | None = None, min_score: float | 
     best: dict[int, Row] = {}
     for r in conn.execute(sql, params):
         cid = r["candidate_id"]
+        found = (jload(r["raw_json"], {}) or {}).get("search_vacancy", "") if r["raw_json"] else ""
+        if found_for and found != found_for:
+            continue
         if cid in best and best[cid].score >= r["score"]:
             continue
         j = jd_by_id[r["jd_id"]]
@@ -129,7 +133,7 @@ def query(conn: sqlite3.Connection, role: str | None = None, min_score: float | 
             rationale=r["rationale"] or "", breakdown=jload(r["breakdown"], {}),
             pdf_path=r["profile_pdf_path"] or "", linkedin_url=r["linkedin_url"] or "",
             email=r["email"] or "", phone=r["phone"] or "",
-            status=r["status"] or "new", last_seen=r["last_seen_at"] or "")
+            status=r["status"] or "new", last_seen=r["last_seen_at"] or "", found_for=found)
     return sorted(best.values(), key=lambda x: (-x.score, -x.semantic))[:limit]
 
 

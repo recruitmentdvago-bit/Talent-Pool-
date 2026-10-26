@@ -238,6 +238,12 @@ def run(sources: list[str] | None = None, dry_run: bool = False,
         jds: list[JD] = [j for _, j in jdmod.load_all(conn, active_only=True)]
         if vacancy:
             jds = [j for j in jds if j.code == vacancy]
+        else:                                          # honour "only these vacancies today"
+            from . import sourcing
+            picked = sourcing.effective_codes(conn)
+            if picked and len(picked) < len(jds):
+                jds = [j for j in jds if j.code in picked]
+                s.notes.append(f"sourcing only: {', '.join(j.code for j in jds)}")
         if not jds:
             s.errors.append(f"no active JDs - put a .md file in {c.path_of('jd_dir')}")
             _finish(conn, s, t0)

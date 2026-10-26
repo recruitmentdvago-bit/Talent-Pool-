@@ -27,7 +27,7 @@ from flask import session as flask_session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .. import jd as jdmod
-from .. import agent, events, report, rules, runner, store
+from .. import agent, events, report, rules, runner, sourcing, store
 from ..ask import parse_ask
 from .. import __version__
 from ..config import cfg, data_dir, is_production
@@ -163,13 +163,14 @@ def _jd_dict(r) -> dict:
             "raw_text": r["raw_text"] or ""}
 
 
-def _row_dict(r: report.Row) -> dict:
+def _row_dict(r: report.Row, titles: dict | None = None) -> dict:
     return {"id": r.candidate_id, "name": r.name, "title": r.current_title,
             "company": r.current_company, "city": r.city, "years": round(r.total_years, 1),
             "vacancy": r.jd_code, "vacancy_title": r.jd_title, "score": r.score,
             "matched": r.matched, "missing": r.missing, "flags": r.flags,
             "status": r.status, "has_pdf": bool(r.pdf_path and Path(r.pdf_path).is_file()),
-            "linkedin_url": _safe_url(r.linkedin_url)}
+            "linkedin_url": _safe_url(r.linkedin_url),
+            "found_for": r.found_for, "found_for_title": (titles or {}).get(r.found_for, "")}
 
 
 def _role_matches(title: str, roles: list[str]) -> bool:
@@ -664,13 +665,15 @@ def create_app() -> Flask:
     def candidates():
         a = request.args
         min_score = float(a["min_score"]) if a.get("min_score") not in (None, "") else None
+        found_for = a.get("found_for") or None
         with session() as conn:
-            rows = report.query(conn, role=a.get("role") or None, min_score=min_score,
+            titles = {r["code"]: r["title"] for r in conn.execute("SELECT code, title FROM jds")}
+            rows = report.query(conn, role=a.get("role") or found_for, min_score=min_score,   # scored for the vacancy it was found for
                                 limit=int(a.get("limit", 300)), status=a.get("status") or None,
                                 city=a.get("city") or None,
                                 include_contacted=a.get("hide_done") != "1",
-                                only_codes=_visible_codes(conn, g.user))
-        return jsonify([_row_dict(r) for r in rows])
+                                only_codes=_visible_codes(conn, g.user), found_for=found_for)
+        return jsonify([_row_dict(r, titles) for r in rows])
 
     @app.post("/api/ask")
     def ask():
@@ -696,9 +699,10 @@ def create_app() -> Flask:
                                 "message": f"No open vacancy matches \"{q['role']}\". "
                                            f"Open vacancies: {', '.join(codes) or 'none yet'}."})
             rows = report.query(conn, role=q["role"], min_score=thr, limit=300, only_codes=allowed)
+            titles = {r["code"]: r["title"] for r in conn.execute("SELECT code, title FROM jds")}
         return jsonify({"understood": q, "min_score": thr,
                         "matched": [{"code": r["code"], "title": r["title"]} for r in matched],
-                        "rows": [_row_dict(r) for r in rows], "message": ""})
+                        "rows": [_row_dict(r, titles) for r in rows], "message": ""})
 
     @app.get("/api/candidates/<int:cid>")
     def candidate(cid):
@@ -772,10 +776,10 @@ def create_app() -> Flask:
         a = request.args
         min_score = float(a["min_score"]) if a.get("min_score") not in (None, "") else None
         with session() as conn:
-            rows = report.query(conn, role=a.get("role") or None, min_score=min_score,
+            rows = report.query(conn, role=a.get("role") or a.get("found_for") or None, min_score=min_score,
                                 limit=2000, status=a.get("status") or None, city=a.get("city") or None,
                                 include_contacted=a.get("hide_done") != "1",
-                                only_codes=_visible_codes(conn, g.user))
+                                only_codes=_visible_codes(conn, g.user), found_for=a.get("found_for") or None)
         if not rows:
             return jsonify({"error": "nothing to export for these filters"}), 404
         fmt = a.get("format", "xlsx")
@@ -1495,6 +1499,35 @@ def create_app() -> Flask:
                 runner.score_all(conn)
         return jsonify({"created": created, "failed": failed, "skipped": skipped, "unknown_columns": unknown})
 
+    # ---- which vacancies are sourced now (admin only) --------------------- #
+    @app.get("/api/sourcing")
+    def sourcing_get():
+        _admin_only()
+        with session() as conn:
+            sel = sourcing.selection(conn)
+            eff = sourcing.effective_codes(conn)
+            vac = [{"code": r["code"], "title": r["title"], "priority": int(r["priority"] or 0),
+                    "sourced": r["code"] in eff}
+                   for r in conn.execute("SELECT code, title, priority FROM jds WHERE active=1 ORDER BY code")]
+        return jsonify({"all": not sel["active"], "until": sel["until"], "vacancies": vac,
+                        "sourced": sum(v["sourced"] for v in vac)})
+
+    @app.post("/api/sourcing")
+    def sourcing_save():
+        _admin_only()
+        d = request.get_json(silent=True) or {}
+        with session() as conn:
+            open_codes = {r["code"] for r in conn.execute("SELECT code FROM jds WHERE active=1")}
+            codes = [c for c in (d.get("codes") or []) if c in open_codes]
+            everything = bool(d.get("all")) or d.get("codes") is None
+            if not everything and not codes:
+                return jsonify({"error": "tick at least one vacancy, or choose all vacancies"}), 400
+            sel = sourcing.save(conn, None if (everything or len(codes) == len(open_codes)) else codes,
+                                bool(d.get("today_only")))
+        events.emit("job", "Sourcing: all open vacancies" if not sel["active"] else
+                    f"Sourcing only {', '.join(sel['codes'])}" + (" (today only)" if sel["until"] else ""))
+        return jsonify({"ok": True, "all": not sel["active"], "until": sel["until"]})
+
     # ---- collector ingest (token, not a browser login) ------------------- #
     def _ingest_auth():
         token = os.environ.get("INGEST_TOKEN", "").strip()
@@ -1513,10 +1546,15 @@ def create_app() -> Flask:
         with session() as conn:
             jdmod.sync_dir(conn)
             kv_set(conn, "collector_last_seen", now())
+        with session() as conn:
+            wanted = sourcing.effective_codes(conn)
+            total = conn.execute("SELECT COUNT(*) FROM jds WHERE active=1").fetchone()[0]
         for p in sorted(jd_dir.glob("*.md")):
-            out.append({"filename": p.name, "text": p.read_text(encoding="utf-8")})
+            code = "-".join(p.stem.split("-", 2)[:2])             # V-007-pharmacist -> V-007
+            if code in wanted:                                    # only the vacancies picked for sourcing now
+                out.append({"filename": p.name, "text": p.read_text(encoding="utf-8")})
         li = cfg().get("linkedin", {}) or {}
-        return jsonify({"vacancies": out,
+        return jsonify({"vacancies": out, "sourcing": {"selected": len(out), "total": total},
                         "settings": {"linkedin": {k: li.get(k) for k in SHARED_LINKEDIN_KEYS}}})
 
     @app.post("/api/ingest/candidates")

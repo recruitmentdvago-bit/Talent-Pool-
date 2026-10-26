@@ -60,7 +60,10 @@ def pull_vacancies(url: str, token: str, log=print) -> int:
     for it in items:
         name = Path(it["filename"]).name                  # never a path from the network
         (jd_dir / name).write_text(it["text"], encoding="utf-8")
-    log(f"pulled {len(items)} vacancy file(s) from the portal")
+    sel = r.json().get("sourcing") or {}
+    log(f"pulled {len(items)} vacancy file(s) from the portal"
+        + (f" (the portal has {sel['total']} open; only these {sel['selected']} are being sourced now)"
+           if sel.get("total") and sel["total"] != len(items) else ""))
     apply_portal_settings(r.json().get("settings"), log)
     return len(items)
 

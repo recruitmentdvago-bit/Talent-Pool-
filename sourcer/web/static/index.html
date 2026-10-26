@@ -210,7 +210,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
     <div class="understood" id="understood"></div>
     <div class="filters">
-      <label class="f">Vacancy<select id="fRole"><option value="">All vacancies</option></select></label>
+      <label class="f">Score against<select id="fRole"><option value="">All vacancies</option></select></label>
+      <label class="f" title="The vacancy the bot was searching for when it found the person (LinkedIn). Scores then show for that vacancy.">Found for<select id="fFound"><option value="">any</option></select></label>
       <label class="f">Minimum score
         <span class="slider"><input type="range" id="fMin" min="0" max="100" step="1" value="75"><output id="fMinOut">75%</output></span></label>
       <label class="f">City<input type="text" id="fCity" placeholder="any"></label>
@@ -227,7 +228,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     <div class="pad row" style="justify-content:space-between;padding-bottom:6px"><b id="count">–</b><span class="sub">click a row for the full profile and why it scored that way</span><span class="grow"></span>
       <button class="btn primary" id="dlAll" disabled title="One ZIP with every resume / profile PDF in this list, plus a cover sheet and an Excel summary">Download all resumes (ZIP)</button></div>
     <div class="tablewrap"><table>
-      <thead><tr><th class="num">Score</th><th>Candidate</th><th>Current role</th><th class="num">Yrs</th><th>City</th><th>Vacancy</th><th>Stage</th></tr></thead>
+      <thead><tr><th class="num">Score</th><th>Candidate</th><th>Current role</th><th class="num">Yrs</th><th>City</th><th>Found for</th><th>Scored for</th><th>Stage</th></tr></thead>
       <tbody id="rows"></tbody>
     </table></div>
     <div class="empty" id="empty" style="display:none"></div>
@@ -238,15 +239,26 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <section id="t-jds">
   <div class="row" style="justify-content:space-between;margin-bottom:14px">
     <div></div>
-    <div class="row" id="jdAdminBtns"><a class="btn" href="/api/templates/vacancy.docx" title="A Word form for ONE vacancy: fill it in, then use 'From Word / PDF files' or 'Load a Word / PDF file' - every field fills itself">⬇ Word template</a>
+    <div class="row" id="jdAdminBtns"><button class="btn" id="srcPick" title="Choose which vacancies the LinkedIn bot searches for - e.g. only Data Analyst today">Choose vacancies to source</button><a class="btn" href="/api/templates/vacancy.docx" title="A Word form for ONE vacancy: fill it in, then use 'From Word / PDF files' or 'Load a Word / PDF file' - every field fills itself">⬇ Word template</a>
     <a class="btn" href="/api/templates/vacancies.xlsx" title="An Excel sheet, one row per vacancy, for adding many at once with 'Bulk add (Excel)'">⬇ Excel template</a>
     <button class="btn" id="bulkJd" title="Choose one or many Word / PDF / text files - one vacancy is made from each">From Word / PDF files</button>
     <button class="btn" id="bulkSheet" title="Download the Excel template, fill one row per vacancy, upload it">Bulk add (Excel)</button>
     <button class="btn primary" id="newJd">+ New vacancy</button></div>
     <input type="file" id="bulkIn" multiple accept=".pdf,.docx,.txt,.md" hidden>
   </div>
+  <div id="srcBanner"></div>
   <div class="grid" id="jdGrid"></div>
 </section>
+
+<!-- sourcing selection modal -->
+<div class="modal" id="srcModal"><div class="card pad" style="max-width:560px">
+  <h2 style="margin-bottom:4px">Which vacancies should the bot source?</h2>
+  <p class="hint" style="margin-bottom:12px">Tick the ones to search on LinkedIn. The collector on your PC picks this up the next time it starts. Everyone is still <b>scored</b> against every vacancy.</p>
+  <div class="row" style="margin-bottom:8px"><button class="btn sm" id="srcAll">Tick all</button><button class="btn sm" id="srcNone">Untick all</button></div>
+  <div class="pick" id="srcList" style="max-height:300px"></div>
+  <label class="row" style="gap:8px;margin-top:12px;font-weight:600"><input type="checkbox" id="srcToday"> Only for today - go back to all vacancies tomorrow</label>
+  <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn" id="srcCancel">Cancel</button><button class="btn primary" id="srcSave">Save</button></div>
+</div></div>
 
 <!-- ================= LINKEDIN ================= -->
 <section id="t-li">
@@ -589,6 +601,7 @@ const cls = s => s >= 85 ? "s-hi" : s >= 75 ? "s-mid" : s >= 60 ? "s-lo" : "s-no
 function params() {
   const p = new URLSearchParams();
   const role = $("#fRole").value; if (role) p.set("role", role);
+  if ($("#fFound").value) p.set("found_for", $("#fFound").value);
   p.set("min_score", $("#fMin").value);
   if ($("#fCity").value.trim()) p.set("city", $("#fCity").value.trim());
   if ($("#fStatus").value) p.set("status", $("#fStatus").value);
@@ -606,6 +619,7 @@ function renderRows(rows, emptyMsg) {
       <td><div class="name">${esc(r.name)}</div><div class="sub">${r.missing.length ? "gaps: " + esc(r.missing.slice(0,3).map(x => x.replace(/_/g," ")).join(", ")) : "no key gaps"}</div></td>
       <td>${esc(r.title || "–")}<div class="sub">${esc(r.company || "")}</div></td>
       <td class="num">${r.years}</td><td>${esc(r.city || "–")}</td>
+      <td>${r.found_for ? `<b>${esc(r.found_for_title || r.found_for)}</b>` : '<span class="sub">imported</span>'}</td>
       <td>${esc(r.vacancy)}</td><td><span class="pill ${r.status === "shortlisted" || r.status === "hired" ? "good" : r.status === "rejected" ? "bad" : ""}">${esc(r.status)}</span></td>
     </tr>`).join("");
   const e = $("#empty");
@@ -629,7 +643,7 @@ const askGo = guard(async () => {
   renderRows(r.rows, r.message || "Nobody at this score for that vacancy yet.");
 });
 $("#askGo").onclick = askGo; $("#askBox").onkeydown = e => { if (e.key === "Enter") askGo(); };
-["fRole","fStatus","fHide"].forEach(i => $("#" + i).onchange = loadCands);
+["fRole","fFound","fStatus","fHide"].forEach(i => $("#" + i).onchange = loadCands);
 $("#fCity").onchange = loadCands;
 $("#fMin").oninput = () => $("#fMinOut").textContent = $("#fMin").value + "%";
 $("#fMin").onchange = loadCands;
@@ -688,21 +702,27 @@ $("#scrim").onclick = closeDrawer; document.addEventListener("keydown", e => { i
 const loadJds = guard(async () => {
   state.jds = await api("/api/jds");
   const admin = _curUser && _curUser.role === "admin";
+  if (admin) { try { state.src = await api("/api/sourcing"); } catch (e) {} }
   if (admin) { try { state.depts = (await api("/api/org")).departments; } catch (e) {} }
   $("#jDept").innerHTML = `<option value="">Auto - match by role</option>` + (state.depts || []).map(d => `<option>${esc(d.name)}</option>`).join("");
   $("#fRole").innerHTML = `<option value="">All vacancies</option>` + state.jds.map(j => `<option value="${esc(j.code)}">${esc(j.code)} · ${esc(j.title)}</option>`).join("");
+  const keepFound = $("#fFound").value;
+  $("#fFound").innerHTML = `<option value="">any</option>` + state.jds.map(j => `<option value="${esc(j.code)}">${esc(j.title)}</option>`).join("");
+  $("#fFound").value = keepFound;
+  const srcOn = {}; if (admin && state.src) state.src.vacancies.forEach(v => srcOn[v.code] = v.sourced);
   $("#jdGrid").innerHTML = state.jds.map(j => `
     <div class="card pad jd"><h2><span>${esc(j.title)}</span><span class="pill">${esc(j.code)}</span></h2>
-      <div style="margin-bottom:8px">${j.department ? `<span class="chip dept" title="${j.department_how === "role" ? "matched by role" : "assigned"}">${esc(j.department)}</span>` : (admin ? `<span class="pill warn">no department</span>` : "")}</div>
+      <div style="margin-bottom:8px">${admin && srcOn[j.code] === false ? '<span class="pill warn" title="Not part of the current sourcing selection">not sourced now</span> ' : ""}${j.department ? `<span class="chip dept" title="${j.department_how === "role" ? "matched by role" : "assigned"}">${esc(j.department)}</span>` : (admin ? `<span class="pill warn">no department</span>` : "")}</div>
       <div class="meta">${esc(j.seniority)} · ${j.min_years}${j.max_years ? "–" + j.max_years : "+"} yrs · ${esc(j.location)} · ${j.openings} opening${j.openings > 1 ? "s" : ""}</div>
       <div class="chips">${j.must_have.map(s => `<span class="chip">${esc(s)}</span>`).join("")}</div>
       <div class="stat"><div><b>${j.above_threshold}</b>at ${state.overview ? state.overview.threshold : 75}%+</div><div><b>${j.best ? j.best.toFixed(0) + "%" : "–"}</b>best</div><div><b>${j.scored}</b>scored</div></div>
       ${j.priority > 0 ? `<span class="pill warn" style="margin-top:8px">priority ${j.priority}</span>` : ""}
       ${(j.effective_employers||[]).length ? `<div class="sub" style="margin-top:8px"><b>Target companies:</b> ${esc(j.effective_employers.slice(0,5).join(", "))}${j.effective_employers.length > 5 ? ` +${j.effective_employers.length - 5}` : ""}</div>` : ""}
       ${(j.effective_titles||[]).length ? `<div class="sub" style="margin-top:3px"><b>Also searched as:</b> ${esc(j.effective_titles.slice(0,4).join(", "))}${j.effective_titles.length > 4 ? ` +${j.effective_titles.length - 4}` : ""}</div>` : ""}
-      <div class="row" style="margin-top:14px"><button class="btn sm${admin ? "" : " primary"}" data-view="${esc(j.code)}">See candidates</button>${admin ? `<button class="btn sm primary" data-source="${esc(j.code)}">Source</button><button class="btn sm" data-edit="${esc(j.code)}">Edit</button><button class="btn sm danger" data-del="${esc(j.code)}">Archive</button>` : ""}</div>
+      <div class="row" style="margin-top:14px"><button class="btn sm${admin ? "" : " primary"}" data-view="${esc(j.code)}">See candidates</button>${admin ? `${_curUser.cloud ? "" : `<button class="btn sm primary" data-source="${esc(j.code)}">Source</button>`}<button class="btn sm" data-edit="${esc(j.code)}">Edit</button><button class="btn sm danger" data-del="${esc(j.code)}">Archive</button>` : ""}</div>
     </div>`).join("") || `<div class="card empty" style="grid-column:1/-1">${admin ? "No vacancies yet. Add your first one to start scoring candidates." : "No vacancies are assigned to you yet. Ask HR to link your department in Org structure."}</div>`;
-  $$("[data-view]").forEach(b => b.onclick = () => { $("#fRole").value = b.dataset.view; showTab("cand"); loadCands(); });
+  srcBanner();
+  $$("[data-view]").forEach(b => b.onclick = () => { $("#fRole").value = b.dataset.view; $("#fFound").value = ""; showTab("cand"); loadCands(); });
   $$("[data-edit]").forEach(b => b.onclick = () => openJd(state.jds.find(j => j.code === b.dataset.edit)));
   $$("[data-source]").forEach(b => b.onclick = guard(async () => {
     await api("/api/run", {method: "POST", json: {kind: "linkedin", vacancy: b.dataset.source}});
@@ -1116,6 +1136,30 @@ $("#agTest").onclick = guard(async () => {
 $("#agClear").onclick = guard(async () => { if (!confirm("Clear the whole activity log?")) return; await api("/api/events", {method: "DELETE"}); agPoll(true); });
 ["agStage", "agCand"].forEach(id => $("#" + id).addEventListener("input", () => agPoll(true)));
 
+/* ---------- which vacancies are sourced (admin) ---------- */
+function srcBanner() {
+  const el = $("#srcBanner"), sr = state.src;
+  if (!sr || !(_curUser && _curUser.role === "admin")) { el.innerHTML = ""; return; }
+  const on = sr.vacancies.filter(v => v.sourced).map(v => v.title);
+  el.innerHTML = sr.all ? `<div class="banner info"><b>Sourcing all ${sr.vacancies.length} open vacancies.</b> Use <i>Choose vacancies to source</i> to search only some of them.</div>`
+    : `<div class="banner warn"><b>Sourcing only ${on.length} of ${sr.vacancies.length}:</b> ${on.map(esc).join(", ")}${sr.until ? " - <b>today only</b>, back to all tomorrow" : ""}. <button class="btn sm" id="srcReset" style="margin-left:8px">Back to all</button></div>`;
+  const r = $("#srcReset"); if (r) r.onclick = guard(async () => { await api("/api/sourcing", {method: "POST", json: {all: true}}); toast("Sourcing all vacancies again"); loadJds(); });
+}
+$("#srcPick").onclick = guard(async () => {
+  state.src = await api("/api/sourcing");
+  $("#srcList").innerHTML = state.src.vacancies.map(v => `<label><input type="checkbox" value="${esc(v.code)}" ${v.sourced ? "checked" : ""}>${esc(v.title)} <span class="sub">${esc(v.code)}${v.priority ? " · priority " + v.priority : ""}</span></label>`).join("");
+  $("#srcToday").checked = !!state.src.until;
+  $("#srcModal").classList.add("on");
+});
+$("#srcAll").onclick = () => $$("#srcList input").forEach(i => i.checked = true);
+$("#srcNone").onclick = () => $$("#srcList input").forEach(i => i.checked = false);
+$("#srcCancel").onclick = () => $("#srcModal").classList.remove("on");
+$("#srcSave").onclick = guard(async () => {
+  const codes = $$("#srcList input:checked").map(i => i.value), total = $$("#srcList input").length;
+  await api("/api/sourcing", {method: "POST", json: codes.length === total ? {all: true} : {codes, today_only: $("#srcToday").checked}});
+  $("#srcModal").classList.remove("on"); toast(codes.length === total ? "Sourcing all vacancies" : `Sourcing ${codes.length} vacanc${codes.length === 1 ? "y" : "ies"}`); loadJds();
+});
+
 /* ---------- preferred companies (admin) ---------- */
 let _editGroup = null;
 const chipList = (items, cls = "") => (items && items.length) ? items.map(x => `<span class="chip ${cls}">${esc(x)}</span>`).join("") : "";
@@ -1276,7 +1320,7 @@ $("#oSave").onclick = guard(async () => {
 });
 
 // close user modal on escape too
-document.addEventListener("keydown", e => { if (e.key === "Escape") ["#userModal", "#deptModal", "#orgModal", "#groupModal", "#titleModal", "#bulkModal"].forEach(m => $(m).classList.remove("on")); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") ["#userModal", "#deptModal", "#orgModal", "#groupModal", "#titleModal", "#bulkModal", "#srcModal"].forEach(m => $(m).classList.remove("on")); });
 
 
 /* ---------- start ---------- */
